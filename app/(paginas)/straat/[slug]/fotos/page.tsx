@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import {
   afbeeldingenVoorStraat,
-  alleStraten,
+  alleSlugs,
   fotoId,
   straatViaSlug,
 } from "@/lib/straten";
@@ -12,7 +12,7 @@ import FotoViewer from "@/components/FotoViewer";
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return alleStraten().map((straat) => ({ slug: straat.slug }));
+  return alleSlugs().map((slug) => ({ slug }));
 }
 
 type Props = { params: Promise<{ slug: string }> };

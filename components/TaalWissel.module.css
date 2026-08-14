@@ -1,0 +1,68 @@
+.wissel {
+  position: relative;
+}
+
+.knop {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--kleur-lijn);
+  border-radius: 12px;
+  box-shadow: var(--schaduw);
+  cursor: pointer;
+}
+
+.vlag {
+  display: block;
+  width: 24px;
+  height: 17px;
+  overflow: hidden;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.vlag svg {
+  display: block;
+}
+
+.menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 11rem;
+  margin: 0;
+  padding: 0.3rem;
+  list-style: none;
+  background: var(--kleur-wit);
+  border-radius: 12px;
+  box-shadow: var(--schaduw);
+}
+
+.optie,
+.optieActief {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.5rem 0.6rem;
+  font: inherit;
+  color: var(--kleur-ink);
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.optie:hover {
+  background: var(--kleur-accent);
+}
+
+.optieActief {
+  font-weight: 600;
+  background: var(--kleur-accent);
+}

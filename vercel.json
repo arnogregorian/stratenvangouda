@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "buildCommand": "npm run sync && npm run build",
+  "build": {
+    "env": {
+      "NODE_OPTIONS": "--experimental-sqlite"
+    }
+  }
+}

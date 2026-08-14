@@ -18,19 +18,33 @@
   background: var(--kleur-primair-donker);
 }
 
-.paneel {
+/* Gecentreerde modal met klikbare achtergrond. */
+.laag {
   position: fixed;
-  left: 50%;
-  bottom: 0;
-  transform: translateX(-50%);
+  inset: 0;
+  z-index: 1500;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: rgba(44, 45, 51, 0.4);
+  cursor: pointer;
+}
+
+.paneel {
+  position: relative;
   width: min(28rem, 100%);
-  max-height: 70vh;
+  max-height: 80vh;
   overflow-y: auto;
   background: var(--kleur-wit);
-  border-radius: var(--radius) var(--radius) 0 0;
-  box-shadow: 0 -4px 24px rgba(44, 45, 51, 0.25);
-  padding: 1rem 1.25rem 1.25rem;
-  z-index: 1200;
+  border-radius: calc(var(--radius) + 4px);
+  box-shadow: 0 14px 44px rgba(44, 45, 51, 0.32);
+  padding: 1.1rem 1.25rem 1.25rem;
 }
 
 .paneelKop {

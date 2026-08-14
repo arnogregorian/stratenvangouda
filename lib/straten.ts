@@ -51,7 +51,7 @@ function naarStraat(rij: any): Straat {
   };
 }
 
-/** Alle huidige straten (verdwenen straten zijn v2, zie RFP §3.2). */
+/** Alle huidige straten (voor kaart, zoekindex en sitemap). */
 export function alleStraten(): Straat[] {
   return getDb()
     .prepare("SELECT * FROM straten WHERE type != 'verdwenen' ORDER BY naam")
@@ -59,9 +59,19 @@ export function alleStraten(): Straat[] {
     .map(naarStraat);
 }
 
+/** Alle slugs, inclusief verdwenen straten — voor generateStaticParams zodat
+ *  óók verdwenen straten een detailpagina krijgen (aanklikbaar vanaf de kaart). */
+export function alleSlugs(): string[] {
+  return getDb()
+    .prepare("SELECT slug FROM straten ORDER BY slug")
+    .all()
+    .map((rij) => (rij as { slug: string }).slug);
+}
+
+/** Detail per slug — vindt zowel huidige als verdwenen straten. */
 export function straatViaSlug(slug: string): Straat | null {
   const rij = getDb()
-    .prepare("SELECT * FROM straten WHERE slug = ? AND type != 'verdwenen'")
+    .prepare("SELECT * FROM straten WHERE slug = ?")
     .get(slug);
   return rij ? naarStraat(rij) : null;
 }

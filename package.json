@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "description": "StratenVanGouda.nl — ontdek de herkomst van Goudse straatnamen. Gebouwd door Webroots B.V. voor Historische Vereniging Die Goude.",
+  "engines": {
+    "node": ">=22.5"
+  },
   "scripts": {
     "sync": "node scripts/sync.mjs",
     "dev": "next dev",

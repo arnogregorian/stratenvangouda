@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
   afbeeldingenVoorStraat,
-  alleStraten,
+  alleSlugs,
   fotoId,
   straatViaSlug,
   SITE_URL,
@@ -16,7 +16,7 @@ import stijl from "./straat.module.css";
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return alleStraten().map((straat) => ({ slug: straat.slug }));
+  return alleSlugs().map((slug) => ({ slug }));
 }
 
 type Props = { params: Promise<{ slug: string }> };

@@ -22,6 +22,7 @@ node scripts/exporteer.mjs  # regenerate public/data/ from existing cache.db, no
 - **`npm run sync` must run before `dev` or `build`.** `data/cache.db` is gitignored and must be built first; the Next app reads it synchronously at render time and will fail without it.
 - **Requires Node ≥ 22.5** — the sync/export scripts use the built-in `node:sqlite` (`DatabaseSync`). Target is Node 24 LTS.
 - No test suite and no lint script are configured. Don't invent one.
+- **Vercel demo:** `vercel.json` overrides the build to `npm run sync && npm run build` (data must be synced before the static export) and sets `NODE_OPTIONS=--experimental-sqlite` so `node:sqlite` works on Node 22.x as well as 24. Production hosting is still the static `out/` on Die Goude's Linux server; `vercel.json` doesn't affect that path.
 
 ## Architecture: the two-stage build
 

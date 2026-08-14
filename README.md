@@ -75,6 +75,22 @@ Publiceer atomisch (rsync naar de live-map of symlink-wissel) zodat bezoekers
 nooit een half-gebouwde site zien. Faalt de sync, dan blijft de vorige versie
 gewoon staan.
 
+### Demo op Vercel
+
+Naast de statische hosting op de eigen Linux-server kan de site als **demo op
+Vercel** draaien. `vercel.json` regelt dit: Vercel voert
+`npm run sync && npm run build` uit, zodat eerst de data wordt opgehaald en
+daarna de volledig statische export (`out/`) wordt gegenereerd en geserveerd.
+
+- **Node.js 22.5+** is vereist voor de ingebouwde `node:sqlite` (zie `engines`
+  in `package.json`). `NODE_OPTIONS=--experimental-sqlite` in `vercel.json`
+  maakt de build ook op Node 22.x werkend; op Node 24 is die vlag een no-op.
+- Elke Vercel-build haalt **live** de actuele data uit de Gouda Tijdmachine op;
+  een deploy kan daardoor enkele minuten duren. Voor een snellere of stabielere
+  demo kan desgewenst een reeds gesyncte `data/cache.db` worden meegeleverd.
+- De uiteindelijke productie-hosting blijft de statische `out/` op de Linux-
+  server van Die Goude; `vercel.json` heeft daar geen invloed op.
+
 ### Omgevingsvariabelen (optioneel)
 
 | Variabele | Doel | Standaard |

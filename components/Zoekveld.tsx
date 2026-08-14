@@ -2,9 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { laadIndex, zoek, type IndexItem } from "@/lib/zoekindex";
+import { useTaal } from "@/lib/taal";
 import stijl from "./Zoekveld.module.css";
 
-export default function Zoekveld() {
+type Props = {
+  /** Locator-knopje per suggestie: toon de straat op de kaart i.p.v. navigeren. */
+  onLocate?: (item: IndexItem) => void;
+};
+
+export default function Zoekveld({ onLocate }: Props) {
+  const { t } = useTaal();
   const [term, setTerm] = useState("");
   const [index, setIndex] = useState<IndexItem[] | null>(null);
   const [suggesties, setSuggesties] = useState<IndexItem[]>([]);
@@ -57,13 +64,13 @@ export default function Zoekveld() {
   return (
     <div ref={wrapperRef} className={stijl.wrapper}>
       <label htmlFor="zoek" className="alleen-screenreader">
-        Zoek een straatnaam
+        {t.zoekLabel}
       </label>
       <input
         id="zoek"
         type="search"
         className={stijl.veld}
-        placeholder="Zoek een straatnaam…"
+        placeholder={t.zoekPlaceholder}
         autoComplete="off"
         role="combobox"
         aria-expanded={open}
@@ -83,13 +90,39 @@ export default function Zoekveld() {
               role="option"
               aria-selected={i === actief}
               className={i === actief ? stijl.itemActief : stijl.item}
-              onPointerDown={(e) => {
-                e.preventDefault();
-                gaNaar(item);
-              }}
             >
-              <span className={stijl.naam}>{item.n}</span>
-              {item.a && <span className={stijl.alt}>{item.a}</span>}
+              <button
+                type="button"
+                className={stijl.keuze}
+                tabIndex={-1}
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  gaNaar(item);
+                }}
+              >
+                <span className={stijl.naam}>{item.n}</span>
+                {item.a && <span className={stijl.alt}>{item.a}</span>}
+              </button>
+              {onLocate && (
+                <button
+                  type="button"
+                  className={stijl.locator}
+                  tabIndex={-1}
+                  aria-label={t.toonOpKaart(item.n)}
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onLocate(item);
+                    setOpen(false);
+                  }}
+                >
+                  <svg aria-hidden="true" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="7" />
+                    <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" />
+                    <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+                  </svg>
+                </button>
+              )}
             </li>
           ))}
         </ul>

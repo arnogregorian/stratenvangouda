@@ -13,3 +13,4 @@ public/data/
 # omgeving & diversen
 .env*
 .DS_Store
+.vercel

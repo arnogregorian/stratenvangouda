@@ -1,0 +1,297 @@
+.scherm {
+  --balk-hoogte: 4.25rem;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* Leaflet-bedieningen (zoomknoppen linksonder, attributie rechtsonder) boven
+   de vaste onderbalk tillen zodat ze bereikbaar en zichtbaar blijven. */
+.scherm :global(.leaflet-bottom) {
+  margin-bottom: var(--balk-hoogte);
+}
+
+/* Zachte verdonkering achter de introkaart; puur visueel (pointer-events uit)
+   zodat een tik op de kaart eronder de kaart bereikt en de intro sluit. */
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 900;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  background: radial-gradient(
+    125% 90% at 50% 42%,
+    rgba(44, 45, 51, 0.3),
+    rgba(44, 45, 51, 0.06) 62%,
+    transparent
+  );
+}
+
+.scrimOpen {
+  opacity: 1;
+}
+
+.intro {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 1000;
+  width: min(28rem, calc(100% - 1.75rem));
+  padding: 1.5rem 1.5rem 1.35rem;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
+  border-radius: calc(var(--radius) + 4px);
+  box-shadow: 0 14px 44px rgba(44, 45, 51, 0.28);
+  /* Gesloten toestand: onzichtbaar, iets kleiner en lager. */
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, -44%) scale(0.96);
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+    visibility 0.4s;
+}
+
+.introOpen {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.sluit {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  color: var(--kleur-ink-zacht);
+  background: var(--kleur-accent);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.sluit:hover {
+  color: var(--kleur-primair);
+}
+
+.titel {
+  margin: 0 0 0.25rem;
+  padding-right: 2.5rem;
+  font-size: 1.5rem;
+  color: var(--kleur-primair);
+}
+
+.ondertitel {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--kleur-ink-zacht);
+}
+
+.hint {
+  margin: 0.85rem 0 0;
+  font-size: 0.8rem;
+  text-align: center;
+  color: var(--kleur-ink-zacht);
+}
+
+/* Offline-opslaan (alleen zichtbaar als de app als PWA draait). */
+.offlineKnop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--kleur-primair);
+  background: var(--kleur-accent);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.offlineKnop:hover {
+  color: var(--kleur-wit);
+  background: var(--kleur-primair);
+}
+
+/* App-achtige onderbalk. */
+.balk {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: stretch;
+  gap: 0.25rem;
+  padding: 0.4rem 0.5rem;
+  padding-bottom: calc(0.4rem + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--kleur-lijn);
+  box-shadow: 0 -2px 16px rgba(44, 45, 51, 0.1);
+}
+
+.tab {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-height: 3.1rem;
+  padding: 0.35rem 0.25rem;
+  color: var(--kleur-ink);
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.tab svg {
+  display: block;
+}
+
+.tab:hover {
+  color: var(--kleur-primair);
+  background: var(--kleur-accent);
+}
+
+/* Actieve toggle-tab (bijv. Verdwenen straten aan). */
+.tabActief,
+.tabActief:hover {
+  color: var(--kleur-wit);
+  background: var(--kleur-primair);
+}
+
+/* Zwevende kaartlaag-knop linksboven. */
+.kaartKnop {
+  position: absolute;
+  top: max(0.75rem, env(safe-area-inset-top));
+  left: max(0.75rem, env(safe-area-inset-left));
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  color: var(--kleur-ink);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--kleur-lijn);
+  border-radius: 12px;
+  box-shadow: var(--schaduw);
+  cursor: pointer;
+}
+
+.kaartKnop:hover {
+  color: var(--kleur-primair);
+}
+
+/* Taalwissel rechtsboven. */
+.taalHoek {
+  position: absolute;
+  top: max(0.75rem, env(safe-area-inset-top));
+  right: max(0.75rem, env(safe-area-inset-right));
+  z-index: 1000;
+}
+
+/* Gecentreerde modal (kaartlaag-keuze). */
+.modalLaag {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.modalScrim {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: rgba(44, 45, 51, 0.4);
+  cursor: pointer;
+}
+
+.modalPaneel {
+  position: relative;
+  width: min(24rem, 100%);
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 1.1rem 1.25rem 1.25rem;
+  background: var(--kleur-wit);
+  border-radius: calc(var(--radius) + 4px);
+  box-shadow: 0 14px 44px rgba(44, 45, 51, 0.32);
+}
+
+.modalKop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.modalTitel {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--kleur-primair);
+}
+
+.kaartLijst {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.kaartKeuze,
+.kaartKeuzeActief {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  min-height: 48px;
+  padding: 0.65rem 0.75rem;
+  font: inherit;
+  text-align: left;
+  color: var(--kleur-ink);
+  background: none;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.kaartKeuze:hover {
+  background: var(--kleur-accent);
+}
+
+.kaartKeuzeActief {
+  color: var(--kleur-wit);
+  background: var(--kleur-primair);
+}
+
+.kaartNaam {
+  font-weight: 600;
+}
+
+.kaartJaar {
+  font-size: 0.85rem;
+  color: var(--kleur-ink-zacht);
+  white-space: nowrap;
+}
+
+.kaartKeuzeActief .kaartJaar {
+  color: rgba(255, 255, 255, 0.85);
+}

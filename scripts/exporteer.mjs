@@ -58,6 +58,29 @@ writeFileSync(
   })
 );
 
+// Verdwenen straten als aparte laag (met slug → aanklikbaar naar de detailpagina).
+const verdwenen = db
+  .prepare("SELECT * FROM straten WHERE type = 'verdwenen' ORDER BY naam")
+  .all()
+  .map((rij) => ({
+    ...rij,
+    geometry: rij.geometry ? JSON.parse(rij.geometry) : null,
+  }));
+
+writeFileSync(
+  join(PUBLIC_DATA, "verdwenen.geojson"),
+  JSON.stringify({
+    type: "FeatureCollection",
+    features: verdwenen
+      .filter((s) => s.geometry)
+      .map((s) => ({
+        type: "Feature",
+        properties: { naam: s.naam, slug: s.slug },
+        geometry: s.geometry,
+      })),
+  })
+);
+
 writeFileSync(
   join(PUBLIC_DATA, "index.json"),
   JSON.stringify(
@@ -76,8 +99,10 @@ mkdirSync(fotosMap);
 const haalFotos = db.prepare(
   "SELECT * FROM afbeeldingen WHERE straat_identifier = ? ORDER BY volgorde"
 );
-let stratenMetFotos = 0;
-for (const straat of huidig) {
+// Fotobestanden voor álle straten (ook verdwenen; die hebben nu detailpagina's).
+const alleStr = [...huidig, ...verdwenen];
+const fotosSlugs = [];
+for (const straat of alleStr) {
   const fotos = haalFotos.all(straat.identifier).map((a, i) => ({
     id: a.identifier?.split("/").pop() || String(i),
     titel: a.titel,
@@ -91,9 +116,34 @@ for (const straat of huidig) {
   }));
   if (!fotos.length) continue;
   writeFileSync(join(fotosMap, `${straat.slug}.json`), JSON.stringify(fotos));
-  stratenMetFotos++;
+  fotosSlugs.push(straat.slug);
 }
 
+// Offline-manifest voor de PWA-download: pagina's + databestanden (eigen origin)
+// en miniatuur-URL's (extern). Wordt alleen opgehaald als de bezoeker in de
+// geïnstalleerde app kiest om alles offline op te slaan.
+const thumbnails = db
+  .prepare(
+    "SELECT DISTINCT thumbnail FROM afbeeldingen WHERE thumbnail IS NOT NULL AND thumbnail != ''"
+  )
+  .all()
+  .map((r) => r.thumbnail);
+const lokaal = [
+  "/",
+  "/hulp/",
+  "/colofon/",
+  "/data/index.json",
+  "/data/straten.geojson",
+  "/data/verdwenen.geojson",
+  ...alleStr.map((s) => `/straat/${s.slug}/`),
+  ...fotosSlugs.map((slug) => `/data/fotos/${slug}.json`),
+];
+writeFileSync(
+  join(PUBLIC_DATA, "offline-manifest.json"),
+  JSON.stringify({ local: lokaal, thumbnails })
+);
+
 console.log(
-  `Export klaar: ${huidig.length} straten in kaart/index, fotobestanden voor ${stratenMetFotos} straten → public/data/`
+  `Export klaar: ${huidig.length} huidige + ${verdwenen.length} verdwenen straten, ` +
+    `fotobestanden voor ${fotosSlugs.length} straten, ${thumbnails.length} miniaturen → public/data/`
 );

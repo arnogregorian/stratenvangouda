@@ -39,18 +39,50 @@
 .item,
 .itemActief {
   display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  padding: 0.6rem 0.75rem;
+  align-items: stretch;
   min-height: 44px;
-  justify-content: center;
   border-radius: 10px;
-  cursor: pointer;
 }
 
 .itemActief,
 .item:hover {
   background: var(--kleur-accent);
+}
+
+/* De hoofdkeuze (naam + alt) navigeert naar de detailpagina. */
+.keuze {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.1rem;
+  min-width: 0;
+  padding: 0.6rem 0.5rem 0.6rem 0.75rem;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Locator-knopje: toont de straat op de kaart i.p.v. te navigeren. */
+.locator {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  margin: 4px;
+  color: var(--kleur-primair);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.locator:hover {
+  background: var(--kleur-wit);
+  color: var(--kleur-primair-donker);
 }
 
 .naam {
