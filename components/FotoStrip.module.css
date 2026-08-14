@@ -1,0 +1,57 @@
+.kop {
+  font-size: 1.15rem;
+  margin: 0 0 0.75rem;
+}
+
+.aantal {
+  font-weight: 400;
+  color: var(--kleur-ink-zacht);
+  font-size: 0.95rem;
+}
+
+.rooster {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tegel {
+  position: relative;
+  display: block;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--kleur-accent);
+}
+
+.tegel img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.tegel:hover img {
+  opacity: 0.85;
+}
+
+.leeg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.jaartal {
+  position: absolute;
+  right: 0.35rem;
+  bottom: 0.35rem;
+  padding: 0.05rem 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--kleur-wit);
+  background: rgba(44, 45, 51, 0.75);
+  border-radius: 999px;
+}

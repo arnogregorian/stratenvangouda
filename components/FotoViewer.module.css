@@ -1,0 +1,85 @@
+.scherm {
+  position: fixed;
+  inset: 0;
+  bottom: calc(var(--footer-hoogte) + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  background: #17181c;
+  color: #f4f2ee;
+}
+
+.kop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+}
+
+.terug {
+  color: #f4f2ee;
+  text-decoration: none;
+  font-weight: 600;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.terug:hover {
+  color: #ffb3ad;
+}
+
+.teller {
+  font-size: 0.9rem;
+  color: #b9b7b2;
+}
+
+.viewer {
+  flex: 1;
+  min-height: 0;
+}
+
+.knoppen {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 10;
+}
+
+.knop {
+  width: 48px;
+  height: 48px;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--kleur-ink);
+  background: rgba(255, 255, 255, 0.92);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: var(--schaduw);
+}
+
+.knop:hover {
+  background: var(--kleur-wit);
+}
+
+.bron {
+  padding: 0.6rem 1rem 0.85rem;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.bronTitel {
+  margin: 0 0 0.15rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.bronRegel {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #b9b7b2;
+}

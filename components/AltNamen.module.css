@@ -1,0 +1,34 @@
+.kop {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--kleur-ink-zacht);
+  margin: 0 0 0.5rem;
+}
+
+.lijst {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.chip {
+  padding: 0.3rem 0.75rem;
+  background: var(--kleur-accent);
+  border-radius: 999px;
+  font-size: 0.9rem;
+}
+
+.meer {
+  min-height: 32px;
+  padding: 0.3rem 0.75rem;
+  background: none;
+  border: 1.5px dashed var(--kleur-lijn);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  color: var(--kleur-primair);
+  cursor: pointer;
+}

@@ -1,0 +1,118 @@
+/*
+ * Designtokens StratenVanGouda.nl
+ * Kleuren afgeleid van de huisstijl van diegoude.nl (primair rood #d32016).
+ * Lettertype: systeemstack als tijdelijke keuze — te vervangen door lokaal
+ * gehost huisstijl-lettertype zodra aangeleverd (geen Google Fonts, RFP §6.1).
+ */
+:root {
+  --kleur-primair: #d32016;
+  --kleur-primair-donker: #a81812;
+  --kleur-ink: #2c2d33;
+  --kleur-ink-zacht: #5c5e66;
+  --kleur-papier: #faf8f5;
+  --kleur-wit: #ffffff;
+  --kleur-lijn: #e5e1da;
+  --kleur-accent: #f6efe4;
+  --schaduw: 0 2px 12px rgba(44, 45, 51, 0.14);
+  --radius: 14px;
+  --font:
+    system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+  --footer-hoogte: 3.75rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  color: var(--kleur-ink);
+  background: var(--kleur-papier);
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.25;
+  margin: 0 0 0.5em;
+}
+
+a {
+  color: var(--kleur-primair);
+}
+
+a:hover {
+  color: var(--kleur-primair-donker);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Toegankelijkheid: duidelijk zichtbare focus (WCAG 2.2 AA) */
+:focus-visible {
+  outline: 3px solid var(--kleur-primair);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 2000;
+  background: var(--kleur-wit);
+  color: var(--kleur-ink);
+  padding: 0.75rem 1rem;
+  border-radius: 0 0 var(--radius) 0;
+}
+
+.skip-link:focus {
+  left: 0;
+}
+
+.alleen-screenreader {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Pagina-indeling voor inhoudspagina's (detail, colofon, hulp) */
+.pagina {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem calc(var(--footer-hoogte) + 2rem);
+}
+
+.pagina-breed {
+  max-width: 60rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

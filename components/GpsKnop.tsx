@@ -1,0 +1,117 @@
+"use client";
+
+import { useState } from "react";
+import { afstandMeters, laadIndex, type IndexItem } from "@/lib/zoekindex";
+import stijl from "./GpsKnop.module.css";
+
+type Resultaat = { item: IndexItem; afstand: number };
+
+/**
+ * "Straten in mijn buurt": locatie wordt pas opgevraagd ná een klik
+ * (expliciete toestemming via de browserprompt, RFP §4.2). De berekening
+ * gebeurt volledig client-side; er wordt geen locatie verstuurd.
+ */
+export default function GpsKnop() {
+  const [open, setOpen] = useState(false);
+  const [bezig, setBezig] = useState(false);
+  const [fout, setFout] = useState<string | null>(null);
+  const [resultaten, setResultaten] = useState<Resultaat[]>([]);
+
+  const zoekInBuurt = () => {
+    setOpen(true);
+    setBezig(true);
+    setFout(null);
+    if (!navigator.geolocation) {
+      setFout("Locatiebepaling wordt niet ondersteund door deze browser.");
+      setBezig(false);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      async (positie) => {
+        try {
+          const index = await laadIndex();
+          const hier: [number, number] = [
+            positie.coords.longitude,
+            positie.coords.latitude,
+          ];
+          const dichtbij = index
+            .filter((i) => i.c)
+            .map((item) => ({
+              item,
+              afstand: afstandMeters(hier, item.c as [number, number]),
+            }))
+            .sort((a, b) => a.afstand - b.afstand)
+            .slice(0, 8);
+          setResultaten(dichtbij);
+        } catch {
+          setFout("De stratenlijst kon niet geladen worden.");
+        }
+        setBezig(false);
+      },
+      (err) => {
+        setFout(
+          err.code === err.PERMISSION_DENIED
+            ? "Locatietoegang is geweigerd. U kunt ook zoeken op straatnaam."
+            : "Uw locatie kon niet bepaald worden."
+        );
+        setBezig(false);
+      },
+      { timeout: 12000, maximumAge: 60000 }
+    );
+  };
+
+  const toonAfstand = (m: number) =>
+    m < 1000 ? `${m} m` : `${(m / 1000).toFixed(1).replace(".", ",")} km`;
+
+  return (
+    <>
+      <button
+        type="button"
+        className={stijl.knop}
+        onClick={zoekInBuurt}
+        aria-haspopup="dialog"
+      >
+        <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 21c-4-4.5-7-8-7-11.5a7 7 0 1 1 14 0C19 13 16 16.5 12 21z" />
+          <circle cx="12" cy="9.5" r="2.5" />
+        </svg>
+        Straten in mijn buurt
+      </button>
+
+      {open && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Straten in mijn buurt"
+          className={stijl.paneel}
+        >
+          <div className={stijl.paneelKop}>
+            <h2 className={stijl.titel}>Straten in mijn buurt</h2>
+            <button
+              type="button"
+              className={stijl.sluit}
+              onClick={() => setOpen(false)}
+              aria-label="Sluiten"
+            >
+              ✕
+            </button>
+          </div>
+          {bezig && <p aria-live="polite">Locatie bepalen…</p>}
+          {fout && <p aria-live="polite">{fout}</p>}
+          {!bezig && !fout && (
+            <ul className={stijl.lijst}>
+              {resultaten.map(({ item, afstand }) => (
+                <li key={item.s}>
+                  <a href={`/straat/${item.s}/`} className={stijl.link}>
+                    <span>{item.n}</span>
+                    <span className={stijl.afstand}>{toonAfstand(afstand)}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </>
+  );
+}

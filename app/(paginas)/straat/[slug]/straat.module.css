@@ -1,0 +1,31 @@
+.kop {
+  margin-bottom: 1rem;
+}
+
+.titel {
+  font-size: 1.9rem;
+  color: var(--kleur-primair);
+  margin: 0 0 0.2rem;
+}
+
+.ligging {
+  margin: 0;
+  color: var(--kleur-ink-zacht);
+  font-size: 0.95rem;
+}
+
+.geenTekst {
+  color: var(--kleur-ink-zacht);
+  font-style: italic;
+}
+
+.vermelding {
+  font-size: 0.85rem;
+  color: var(--kleur-ink-zacht);
+  border-left: 3px solid var(--kleur-lijn);
+  padding-left: 0.75rem;
+}
+
+.blok {
+  margin-top: 1.75rem;
+}

@@ -1,0 +1,28 @@
+{
+  "name": "stratenvangouda",
+  "version": "0.1.0",
+  "private": true,
+  "description": "StratenVanGouda.nl — ontdek de herkomst van Goudse straatnamen. Gebouwd door Webroots B.V. voor Historische Vereniging Die Goude.",
+  "scripts": {
+    "sync": "node scripts/sync.mjs",
+    "dev": "next dev",
+    "build": "next build",
+    "serve": "npx serve out"
+  },
+  "dependencies": {
+    "leaflet": "^1.9.4",
+    "marked": "^18.0.6",
+    "next": "^16.2.10",
+    "openseadragon": "^6.0.2",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.21",
+    "@types/node": "^26.1.1",
+    "@types/openseadragon": "^5.0.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3"
+  }
+}

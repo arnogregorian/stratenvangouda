@@ -1,0 +1,28 @@
+.wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.knop {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  padding: 0.45rem 1rem;
+  font-weight: 600;
+  color: var(--kleur-primair);
+  background: var(--kleur-wit);
+  border: 1.5px solid var(--kleur-primair);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.knop:hover {
+  background: var(--kleur-accent);
+}
+
+.melding {
+  font-size: 0.85rem;
+  color: var(--kleur-ink-zacht);
+}

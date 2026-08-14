@@ -1,0 +1,15 @@
+# dependencies & build
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# gegenereerde data (opnieuw aan te maken met `npm run sync`)
+data/cache.db
+data/cache.db.tmp
+public/data/
+
+# omgeving & diversen
+.env*
+.DS_Store

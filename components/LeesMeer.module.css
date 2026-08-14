@@ -1,0 +1,16 @@
+.alinea {
+  margin: 0 0 0.9em;
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.toggle {
+  min-height: 44px;
+  padding: 0.4rem 0;
+  font-weight: 600;
+  color: var(--kleur-primair);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
