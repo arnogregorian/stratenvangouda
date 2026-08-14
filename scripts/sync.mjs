@@ -76,6 +76,19 @@ async function werkLijstAf(items, verwerk) {
   await Promise.all(Array.from({ length: CONCURRENCY }, werker));
 }
 
+/** Aantal afbeeldingen in de bestaande cache (0 als er nog geen is of hij onleesbaar is). */
+function leesVorigAantalAfbeeldingen(pad) {
+  if (!existsSync(pad)) return 0;
+  try {
+    const oud = new DatabaseSync(pad, { readOnly: true });
+    const rij = oud.prepare("SELECT COUNT(*) AS n FROM afbeeldingen").get();
+    oud.close();
+    return Number(rij?.n ?? 0);
+  } catch {
+    return 0;
+  }
+}
+
 console.log(`Sync gestart vanaf ${API}`);
 
 // 1. Alle straten inclusief geometrie via de GeoJSON-variant (één call)
@@ -140,6 +153,41 @@ for (const straat of straten) {
   const aantal = slugTeller.get(basis) ?? 0;
   slugTeller.set(basis, aantal + 1);
   straat.slug = aantal === 0 ? basis : `${basis}-${aantal + 1}`;
+}
+
+// 3c. Veiligheidscontrole vóór de atomische wissel. Een volledige sync hoort
+// duizenden afbeeldingen te bevatten (18 jul 2026: 9.845). Levert de bron er nul
+// op — of drastisch minder dan de vorige keer — dan is er bovenstrooms iets stuk
+// (bijv. /afbeeldingen dat 404 geeft voor álle straten). We overschrijven cache.db
+// dan NIET met een fotoloze dataset: afbreken met exitcode 1 laat de bestaande
+// cache intact en de (Vercel-)build zichtbaar falen, i.p.v. stilzwijgend een site
+// zonder beeldmateriaal op te leveren. Forceren kan met SYNC_STA_GEEN_AFBEELDINGEN=1
+// (voor het zeldzame geval dat de bron bewust geen afbeeldingen meer heeft).
+const totaalAfbeeldingen = straten.reduce((n, s) => n + s.afbeeldingen.length, 0);
+const vorigeAfbeeldingen = leesVorigAantalAfbeeldingen(DB_PATH);
+const minRatio = Number(process.env.SYNC_MIN_AFBEELDINGEN_RATIO ?? 0.5);
+const forceerLeeg = process.env.SYNC_STA_GEEN_AFBEELDINGEN === "1";
+if (!forceerLeeg && totaalAfbeeldingen === 0) {
+  console.error(
+    `Sync afgebroken: 0 afbeeldingen opgehaald voor ${straten.length} straten. ` +
+      `Waarschijnlijk is de bron (/afbeeldingen) tijdelijk stuk. ` +
+      `cache.db is NIET overschreven. Forceren met SYNC_STA_GEEN_AFBEELDINGEN=1.`
+  );
+  process.exit(1);
+}
+if (
+  !forceerLeeg &&
+  vorigeAfbeeldingen > 0 &&
+  totaalAfbeeldingen < vorigeAfbeeldingen * minRatio
+) {
+  console.error(
+    `Sync afgebroken: slechts ${totaalAfbeeldingen} afbeeldingen opgehaald, fors ` +
+      `minder dan de vorige ${vorigeAfbeeldingen} (< ${Math.round(minRatio * 100)}%). ` +
+      `Mogelijk bronprobleem. cache.db is NIET overschreven. ` +
+      `Forceren met SYNC_STA_GEEN_AFBEELDINGEN=1 of drempel bijstellen via ` +
+      `SYNC_MIN_AFBEELDINGEN_RATIO.`
+  );
+  process.exit(1);
 }
 
 // 4. Wegschrijven naar SQLite (eerst naar tijdelijk bestand, dan atomisch wisselen)
@@ -208,7 +256,6 @@ renameSync(tmpPad, DB_PATH);
 await import("./exporteer.mjs");
 
 const huidig = straten.filter((s) => s.type !== "verdwenen");
-const totaalAfbeeldingen = straten.reduce((n, s) => n + s.afbeeldingen.length, 0);
 console.log(
   `Klaar: ${straten.length} straten (${huidig.length} huidig), ${totaalAfbeeldingen} afbeeldingen → data/cache.db + public/data/`
 );
