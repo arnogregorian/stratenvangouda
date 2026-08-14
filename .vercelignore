@@ -1,0 +1,22 @@
+# De Vercel-build draait remote: `npm run sync && npm run build` (zie vercel.json).
+# Alles hieronder wordt dáár opnieuw gegenereerd en hoeft niet geüpload te worden.
+# Let op: de Vercel-CLI leest .gitignore NIET voor de upload — zonder dit bestand
+# gaat o.a. out/ (25k bestanden) mee → "files should NOT have more than 15000 items".
+
+# Statische export en Next-cache (worden opnieuw gebouwd)
+out
+.next
+*.tsbuildinfo
+next-env.d.ts
+
+# Afhankelijkheden (worden opnieuw geïnstalleerd)
+node_modules
+
+# Gegenereerde data (opnieuw aangemaakt door `npm run sync` tijdens de build)
+data
+public/data
+
+# Omgeving & diversen
+.env*
+.vercel
+.DS_Store
