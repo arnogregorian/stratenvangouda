@@ -16,7 +16,12 @@
 #    lftp en níet SamKirkland/FTP-Deploy-Action: de onderliggende Node-
 #    library (basic-ftp) hergebruikt de TLS-sessie niet en breekt direct af
 #    met "read ECONNRESET (data socket)" — proefondervindelijk vastgesteld
-#    op 11 sept 2026 (run 34573455861).
+#    op 11 sept 2026 (run 34573455861);
+#  - de FTP-server stuurt alleen het leaf-certificaat mee, zonder het
+#    Sectigo-tussencertificaat. Dat tussencertificaat ligt daarom vast in
+#    .github/sectigo-server-auth-dv-r36.pem (geldig t/m maart 2036) en gaat
+#    hieronder mee in de CA-bundel, zodat certificaatverificatie gewoon aan
+#    kan blijven.
 name: Bouw en uitrol
 
 on:
@@ -92,7 +97,9 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq lftp
+          cat /etc/ssl/certs/ca-certificates.crt .github/sectigo-server-auth-dv-r36.pem > /tmp/ca-bundel.pem
           lftp -p 21 -u "$FTPS_GEBRUIKER,$FTPS_WACHTWOORD" "ftp://$FTPS_HOST" <<'LFTP'
+          set ssl:ca-file "/tmp/ca-bundel.pem"
           set ftp:ssl-force true
           set ftp:ssl-protect-data true
           set ssl:verify-certificate true
