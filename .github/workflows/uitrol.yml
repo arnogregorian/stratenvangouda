@@ -12,7 +12,11 @@
 #  - de server dwingt TLS niet af, dus het protocol staat hier expliciet op
 #    ftps zodat het wachtwoord nooit onversleuteld over de lijn gaat;
 #  - de ProFTPD eist TLS-sessiehergebruik op het datakanaal; een client die
-#    dat niet kan strandt op "425 Unable to build data connection".
+#    dat niet kan strandt op "425 Unable to build data connection". Daarom
+#    lftp en níet SamKirkland/FTP-Deploy-Action: de onderliggende Node-
+#    library (basic-ftp) hergebruikt de TLS-sessie niet en breekt direct af
+#    met "read ECONNRESET (data socket)" — proefondervindelijk vastgesteld
+#    op 11 sept 2026 (run 34573455861).
 name: Bouw en uitrol
 
 on:
@@ -76,17 +80,29 @@ jobs:
           NEXT_PUBLIC_MATOMO_URL: https://stats.diegoude.nl
           NEXT_PUBLIC_MATOMO_SITE_ID: "1"
 
+      # Spiegelt out/ naar de webmap. --delete ruimt verouderde bestanden op
+      # (oude gehashte _next-assets), maar uitgesloten paden zoals de
+      # .htaccess van Richard worden nooit verwijderd of overschreven.
       - name: Uitrol via FTPS
         if: github.event_name == 'workflow_dispatch' || steps.sync.outputs.gewijzigd == 'ja'
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTPS_HOST }}
-          username: ${{ secrets.FTPS_GEBRUIKER }}
-          password: ${{ secrets.FTPS_WACHTWOORD }}
-          protocol: ftps
-          port: 21
-          local-dir: out/
-          server-dir: ./
+        env:
+          FTPS_HOST: ${{ secrets.FTPS_HOST }}
+          FTPS_GEBRUIKER: ${{ secrets.FTPS_GEBRUIKER }}
+          FTPS_WACHTWOORD: ${{ secrets.FTPS_WACHTWOORD }}
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lftp
+          lftp -p 21 -u "$FTPS_GEBRUIKER,$FTPS_WACHTWOORD" "ftp://$FTPS_HOST" <<'LFTP'
+          set ftp:ssl-force true
+          set ftp:ssl-protect-data true
+          set ssl:verify-certificate true
+          set net:timeout 30
+          set net:max-retries 2
+          set net:persist-retries 2
+          set cmd:fail-exit true
+          mirror -R --delete --parallel=5 --exclude-glob .htaccess --exclude-glob .ftpquota --exclude-glob .well-known/ out/ /
+          bye
+          LFTP
 
       - name: cache.db bewaren voor de volgende run
         if: github.event_name == 'workflow_dispatch' || steps.sync.outputs.gewijzigd == 'ja'
