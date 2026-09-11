@@ -1,0 +1,96 @@
+# Dagelijkse verversing en uitrol naar de server van Die Goude (route b).
+#
+# Dagelijks (schedule): conditionele sync met --alleen-bij-wijziging — bij een
+# 304 van de bron (exitcode 3) worden herbouw en uitrol overgeslagen.
+# Handmatig (workflow_dispatch): altijd volledige sync + build + uitrol.
+#
+# Uitrol gaat via FTPS (expliciete FTP over TLS) naar de gedeelde Vimexx-
+# hosting; het account is gechroot in de webmap van het domein, dus het
+# doelpad is simpelweg "/". Let op (afspraken met Richard, sept 2026):
+#  - host is web0155.zxcs.nl, níet het domein — het FTP-certificaat is
+#    *.zxcs.nl en de domeinnaam geeft dus een certificaatfout;
+#  - de server dwingt TLS niet af, dus het protocol staat hier expliciet op
+#    ftps zodat het wachtwoord nooit onversleuteld over de lijn gaat;
+#  - de ProFTPD eist TLS-sessiehergebruik op het datakanaal; een client die
+#    dat niet kan strandt op "425 Unable to build data connection".
+name: Bouw en uitrol
+
+on:
+  schedule:
+    - cron: "17 4 * * *" # dagelijks 04:17 UTC (05:17/06:17 NL)
+  workflow_dispatch:
+
+concurrency:
+  group: uitrol
+  cancel-in-progress: false
+
+jobs:
+  bouw-en-publiceer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # cache.db van de vorige run terughalen zodat de conditionele sync met
+      # de bewaarde ETag/Last-Modified-validators kan werken.
+      - name: Vorige cache.db terughalen
+        uses: actions/cache/restore@v4
+        with:
+          path: data/cache.db
+          key: cachedb-${{ github.run_id }}
+          restore-keys: cachedb-
+
+      - name: Sync (dagelijks, alleen bij wijziging)
+        id: sync
+        if: github.event_name == 'schedule'
+        run: |
+          set +e
+          node scripts/sync.mjs --alleen-bij-wijziging
+          code=$?
+          set -e
+          if [ "$code" -eq 3 ]; then
+            echo "Bron ongewijzigd; herbouw en uitrol worden overgeslagen."
+            echo "gewijzigd=nee" >> "$GITHUB_OUTPUT"
+          elif [ "$code" -eq 0 ]; then
+            echo "gewijzigd=ja" >> "$GITHUB_OUTPUT"
+          else
+            exit "$code"
+          fi
+
+      - name: Sync (handmatig, volledig)
+        if: github.event_name == 'workflow_dispatch'
+        run: npm run sync
+
+      - name: Statische build
+        if: github.event_name == 'workflow_dispatch' || steps.sync.outputs.gewijzigd == 'ja'
+        run: npm run build
+        env:
+          SITE_URL: https://stratenvangouda.nl
+          NEXT_PUBLIC_MATOMO_URL: https://stats.diegoude.nl
+          NEXT_PUBLIC_MATOMO_SITE_ID: "1"
+
+      - name: Uitrol via FTPS
+        if: github.event_name == 'workflow_dispatch' || steps.sync.outputs.gewijzigd == 'ja'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTPS_HOST }}
+          username: ${{ secrets.FTPS_GEBRUIKER }}
+          password: ${{ secrets.FTPS_WACHTWOORD }}
+          protocol: ftps
+          port: 21
+          local-dir: out/
+          server-dir: ./
+
+      - name: cache.db bewaren voor de volgende run
+        if: github.event_name == 'workflow_dispatch' || steps.sync.outputs.gewijzigd == 'ja'
+        uses: actions/cache/save@v4
+        with:
+          path: data/cache.db
+          key: cachedb-${{ github.run_id }}
