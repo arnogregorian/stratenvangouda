@@ -1,0 +1,56 @@
+# stratenvangouda.nl: statische export van Next.js, uitgerold via GitHub Actions.
+# Aangeleverd door Die Goude (beheer@diegoude.nl), 10-9-2026. Hoort in public/ van de repository,
+# zodat hij bij elke uitrol meekomt. Server: LiteSpeed met Apache-compatibele .htaccess.
+
+Options -Indexes
+DirectoryIndex index.html
+ErrorDocument 404 /404.html
+
+AddType application/manifest+json .webmanifest
+AddType application/geo+json .geojson
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # altijd https en zonder www. Deze server staat achter een proxy: %{HTTPS} is daar nooit "on"
+  # (dat gaf een doorverwijslus), dus kijken naar X-Forwarded-Proto, zoals de andere Die Goude-sites
+  # op dezelfde server. De acme-challenge blijft bereikbaar voor de vernieuwing van het certificaat.
+  RewriteCond %{REQUEST_URI} !^/\.well-known/acme-challenge/
+  RewriteCond %{HTTP_USER_AGENT} !lscache_runner [NC]
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https [OR]
+  RewriteCond %{HTTP_HOST} ^www\. [NC]
+  RewriteRule ^ https://stratenvangouda.nl%{REQUEST_URI} [R=301,L]
+
+  # trailingSlash: /colofon wordt /colofon/
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME}/index.html -f
+  # absoluut doel: een relatief doel maakt de server achter de proxy af met http
+  RewriteRule ^(.*[^/])$ https://stratenvangouda.nl/$1/ [R=301,L]
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml application/javascript text/javascript application/json application/manifest+json application/geo+json image/svg+xml
+</IfModule>
+
+<IfModule mod_headers.c>
+  # zonder deze header weigert de browser locatiebepaling ("straten in mijn buurt")
+  Header always set Permissions-Policy "geolocation=(self)"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Strict-Transport-Security "max-age=31536000"
+
+  # gehashte bestanden van Next.js veranderen nooit van inhoud
+  <If "%{REQUEST_URI} =~ m#^/_next/static/#">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </If>
+
+  # HTML, de RSC-bestanden (.txt), data, manifest en service worker altijd opnieuw controleren
+  <FilesMatch "(\.html|\.txt|\.json|\.geojson|\.webmanifest|^sw\.js)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+
+  # afbeeldingen en lettertypen
+  <FilesMatch "\.(png|jpe?g|webp|avif|gif|svg|ico|woff2?)$">
+    Header set Cache-Control "public, max-age=2592000"
+  </FilesMatch>
+</IfModule>

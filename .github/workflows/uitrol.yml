@@ -79,7 +79,12 @@ jobs:
 
       - name: Statische build
         if: github.event_name == 'workflow_dispatch' || steps.sync.outputs.gewijzigd == 'ja'
-        run: npm run build
+        # De cp is een vangnet: de .htaccess van Richard (public/.htaccess,
+        # sinds 11 sept 2026 is de repo-versie leidend) moet gegarandeerd in
+        # out/ zitten, ook als de export verborgen bestanden zou overslaan.
+        run: |
+          npm run build
+          cp public/.htaccess out/.htaccess
         env:
           SITE_URL: https://stratenvangouda.nl
           NEXT_PUBLIC_MATOMO_URL: https://stats.diegoude.nl
@@ -91,8 +96,9 @@ jobs:
       # anderhalf uur over FTP). Bewust géén --delete zolang de build-id per
       # build wisselt: reeds geüploade pagina's verwijzen naar hun eigen
       # _next/static/<buildId>/-manifest en die moeten blijven staan.
-      # Uitgesloten paden zoals de .htaccess van Richard worden nooit
-      # verwijderd of overschreven.
+      # .well-known blijft uitgesloten (acme-challenge van de hoster); de
+      # .htaccess gaat sinds 11 sept 2026 juist wél mee, want de versie in
+      # de repository (public/.htaccess) is leidend.
       - name: Uitrol via FTPS
         if: github.event_name == 'workflow_dispatch' || steps.sync.outputs.gewijzigd == 'ja'
         env:
@@ -112,7 +118,7 @@ jobs:
           set net:max-retries 2
           set net:persist-retries 2
           set cmd:fail-exit true
-          mirror -R --ignore-time --parallel=5 --exclude-glob .htaccess --exclude-glob .ftpquota --exclude-glob .well-known/ out/ /
+          mirror -R --ignore-time --parallel=5 --exclude-glob .ftpquota --exclude-glob .well-known/ out/ /
           bye
           LFTP
 
