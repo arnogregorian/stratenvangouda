@@ -36,7 +36,7 @@ concurrency:
 jobs:
   bouw-en-publiceer:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 170
     steps:
       - uses: actions/checkout@v5
 
@@ -85,9 +85,14 @@ jobs:
           NEXT_PUBLIC_MATOMO_URL: https://stats.diegoude.nl
           NEXT_PUBLIC_MATOMO_SITE_ID: "1"
 
-      # Spiegelt out/ naar de webmap. --delete ruimt verouderde bestanden op
-      # (oude gehashte _next-assets), maar uitgesloten paden zoals de
-      # .htaccess van Richard worden nooit verwijderd of overschreven.
+      # Spiegelt out/ naar de webmap. --ignore-time vergelijkt op grootte:
+      # elke build geeft alle bestanden nieuwe tijdstempels, dus op tijd
+      # vergelijken zou dagelijks alle ~30k bestanden opnieuw uploaden (ruim
+      # anderhalf uur over FTP). Bewust géén --delete zolang de build-id per
+      # build wisselt: reeds geüploade pagina's verwijzen naar hun eigen
+      # _next/static/<buildId>/-manifest en die moeten blijven staan.
+      # Uitgesloten paden zoals de .htaccess van Richard worden nooit
+      # verwijderd of overschreven.
       - name: Uitrol via FTPS
         if: github.event_name == 'workflow_dispatch' || steps.sync.outputs.gewijzigd == 'ja'
         env:
@@ -107,7 +112,7 @@ jobs:
           set net:max-retries 2
           set net:persist-retries 2
           set cmd:fail-exit true
-          mirror -R --delete --parallel=5 --exclude-glob .htaccess --exclude-glob .ftpquota --exclude-glob .well-known/ out/ /
+          mirror -R --ignore-time --parallel=5 --exclude-glob .htaccess --exclude-glob .ftpquota --exclude-glob .well-known/ out/ /
           bye
           LFTP
 
