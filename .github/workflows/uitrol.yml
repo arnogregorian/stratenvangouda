@@ -116,20 +116,33 @@ jobs:
           # wordt pas vertrouwd nadat leaf + tussencertificaat samen tegen
           # de systeemroots verifiëren; anders terugval op de vastgelegde
           # kopie in de repository.
-          openssl s_client -connect "$FTPS_HOST:21" -starttls ftp </dev/null 2>/dev/null | openssl x509 -out /tmp/leaf.pem
-          aia=$(openssl x509 -in /tmp/leaf.pem -noout -text | grep -o 'http://[^[:space:]]*\.crt' | head -1)
           tussen=.github/sectigo-server-auth-dv-r36.pem
-          if [ -n "$aia" ] && curl -fsS --max-time 30 "$aia" -o /tmp/tussen.bin; then
-            openssl x509 -inform DER -in /tmp/tussen.bin -out /tmp/tussen.pem 2>/dev/null \
-              || openssl x509 -in /tmp/tussen.bin -out /tmp/tussen.pem
-            if openssl verify -untrusted /tmp/tussen.pem /tmp/leaf.pem >/dev/null 2>&1; then
-              tussen=/tmp/tussen.pem
-              echo "Tussencertificaat opgehaald en geverifieerd via $aia"
+          leaf_ok=false
+          for poging in 1 2 3; do
+            if timeout 60 openssl s_client -connect "$FTPS_HOST:21" -starttls ftp </dev/null 2>/dev/null | openssl x509 -out /tmp/leaf.pem 2>/dev/null; then
+              leaf_ok=true
+              break
+            fi
+            echo "Servercertificaat ophalen mislukt (poging $poging van 3)."
+            sleep 10
+          done
+          if $leaf_ok; then
+            aia=$(openssl x509 -in /tmp/leaf.pem -noout -text | grep -o 'http://[^[:space:]]*\.crt' | head -1)
+            if [ -n "$aia" ] && curl -fsS --max-time 30 "$aia" -o /tmp/tussen.bin; then
+              openssl x509 -inform DER -in /tmp/tussen.bin -out /tmp/tussen.pem 2>/dev/null \
+                || openssl x509 -in /tmp/tussen.bin -out /tmp/tussen.pem 2>/dev/null \
+                || true
+              if [ -s /tmp/tussen.pem ] && openssl verify -untrusted /tmp/tussen.pem /tmp/leaf.pem >/dev/null 2>&1; then
+                tussen=/tmp/tussen.pem
+                echo "Tussencertificaat opgehaald en geverifieerd via $aia"
+              else
+                echo "Opgehaald tussencertificaat verifieert niet; terugval op vastgelegde kopie."
+              fi
             else
-              echo "Opgehaald tussencertificaat verifieert niet; terugval op vastgelegde kopie."
+              echo "Geen AIA-URL gevonden of download mislukt; terugval op vastgelegde kopie."
             fi
           else
-            echo "Geen AIA-URL gevonden of download mislukt; terugval op vastgelegde kopie."
+            echo "Servercertificaat niet op te halen; terugval op vastgelegde kopie."
           fi
           cat /etc/ssl/certs/ca-certificates.crt "$tussen" > /tmp/ca-bundel.pem
 
