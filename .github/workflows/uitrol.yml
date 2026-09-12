@@ -108,7 +108,31 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq lftp
-          cat /etc/ssl/certs/ca-certificates.crt .github/sectigo-server-auth-dv-r36.pem > /tmp/ca-bundel.pem
+
+          # Tussencertificaat per run vers ophalen via de AIA-URL uit het
+          # servercertificaat (verzoek Richard, 12 sept 2026): zo overleeft
+          # de uitrol een wissel van certificaatuitgever bij Vimexx. De
+          # AIA-download gaat over kaal http, dus het opgehaalde certificaat
+          # wordt pas vertrouwd nadat leaf + tussencertificaat samen tegen
+          # de systeemroots verifiëren; anders terugval op de vastgelegde
+          # kopie in de repository.
+          openssl s_client -connect "$FTPS_HOST:21" -starttls ftp </dev/null 2>/dev/null | openssl x509 -out /tmp/leaf.pem
+          aia=$(openssl x509 -in /tmp/leaf.pem -noout -text | grep -o 'http://[^[:space:]]*\.crt' | head -1)
+          tussen=.github/sectigo-server-auth-dv-r36.pem
+          if [ -n "$aia" ] && curl -fsS --max-time 30 "$aia" -o /tmp/tussen.bin; then
+            openssl x509 -inform DER -in /tmp/tussen.bin -out /tmp/tussen.pem 2>/dev/null \
+              || openssl x509 -in /tmp/tussen.bin -out /tmp/tussen.pem
+            if openssl verify -untrusted /tmp/tussen.pem /tmp/leaf.pem >/dev/null 2>&1; then
+              tussen=/tmp/tussen.pem
+              echo "Tussencertificaat opgehaald en geverifieerd via $aia"
+            else
+              echo "Opgehaald tussencertificaat verifieert niet; terugval op vastgelegde kopie."
+            fi
+          else
+            echo "Geen AIA-URL gevonden of download mislukt; terugval op vastgelegde kopie."
+          fi
+          cat /etc/ssl/certs/ca-certificates.crt "$tussen" > /tmp/ca-bundel.pem
+
           lftp -p 21 -u "$FTPS_GEBRUIKER,$FTPS_WACHTWOORD" "ftp://$FTPS_HOST" <<'LFTP'
           set ssl:ca-file "/tmp/ca-bundel.pem"
           set ftp:ssl-force true
