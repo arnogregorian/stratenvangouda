@@ -125,7 +125,12 @@ export default async function StraatPagina({ params }: Props) {
       />
       <article>
         <header className={stijl.kop}>
-          <h1 className={stijl.titel}>{straat.naam}</h1>
+          <div className={stijl.titelRij}>
+            <h1 className={stijl.titel}>{straat.naam}</h1>
+            {straat.sinds && (
+              <span className={stijl.sinds}>Sinds {straat.sinds}</span>
+            )}
+          </div>
           {straat.ligging && <p className={stijl.ligging}>{straat.ligging}</p>}
         </header>
 
@@ -153,30 +158,9 @@ export default async function StraatPagina({ params }: Props) {
           </div>
         )}
 
-        {/* Kanttekening bij een problematische straatnaam, net boven de beelden. */}
-        {straat.problematisch && (
-          <aside className={`${stijl.blok} ${stijl.problematisch}`}>
-            <strong className={stijl.problematischKop}>
-              Kanttekening bij deze straatnaam
-            </strong>
-            <LeesMeer tekst={straat.problematisch} />
-          </aside>
-        )}
-
         <div className={stijl.blok}>
           <FotoStrip eerste={eersteFotos} totaal={alleFotos.length} slug={slug} />
         </div>
-
-        {/*
-          RFP §4.3 noemt ook leeftijd/jaartal en wijk. Deze velden zitten nog
-          niet in de Straatnamen API (afstemmen met Gouda Tijdmachine); zodra
-          beschikbaar hier tonen. De vermelding staat onderaan de pagina.
-        */}
-        {straat.vermeldingen && (
-          <p className={`${stijl.blok} ${stijl.vermelding}`}>
-            <strong>Vermelding:</strong> {straat.vermeldingen}
-          </p>
-        )}
       </article>
     </main>
   );

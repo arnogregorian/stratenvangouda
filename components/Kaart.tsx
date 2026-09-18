@@ -33,49 +33,41 @@ const LOCATIE_OPTIES = {
   enableHighAccuracy: true,
 } as const;
 
-// Historische kaarten (Gemeente Gouda) via de GeoWebCache-WMTS in het native
-// EPSG:900913-tegelgrid (= 3857). De eerdere losse WMS-aanroep liet GeoServer
-// per 256px-tegel herprojecteren, met witte verticale strepen als gevolg.
+// Historische kaarten liggen als overlay óp PDOK. Blaeu (1649) komt uit de
+// GeoWebCache-WMTS van de Gemeente Gouda in het native EPSG:900913-tegelgrid
+// (= 3857); de kadastrale kaart van 1832 uit de tileserver van HUC KNAW.
 const WMTS_URL =
   "https://gis.gouda.nl/geoserver/gwc/service/wmts?Service=WMTS&Request=GetTile&Version=1.0.0" +
   "&Layer=CHRASTER:{laag}&Style=&TileMatrixSet=EPSG:900913&Format=image/png" +
   "&TileMatrix=EPSG:900913:{z}&TileCol={x}&TileRow={y}";
 const WMTS_ATTRIB = "<a href='https://gis.gouda.nl'>Gemeente Gouda</a>";
-// Dekking per laag ([[zuid, west], [noord, oost]]) uit de WMTS GetCapabilities.
-// Buiten deze bounds geeft GeoWebCache een 400 in plaats van een lege tegel,
-// dus zonder bounds zou Leaflet daar kapotte tegels tonen.
+// Per laag de tegel-URL, bronvermelding en (optioneel) dekking. Buiten `bounds`
+// vraagt Leaflet geen tegels op — nodig voor de WMTS, die daarbuiten een 400
+// geeft in plaats van een lege tegel.
 const HISTORISCHE_LAGEN: Record<
   string,
-  { laag: string; bounds: [[number, number], [number, number]] }
+  {
+    url: string;
+    attribution: string;
+    bounds?: [[number, number], [number, number]];
+    maxNativeZoom?: number;
+  }
 > = {
-  deventer: {
-    laag: "Jacob_van_Deventer",
-    bounds: [[51.993145, 4.691862], [52.024551, 4.734236]],
-  },
-  braun: {
-    laag: "braun_hogenberg",
-    bounds: [[52.00248, 4.693115], [52.019487, 4.727399]],
-  },
-  kad1613: {
-    laag: "Kadastrale_kaart_1613",
-    bounds: [[51.989246, 4.662473], [52.033667, 4.741551]],
-  },
   blaeu: {
-    laag: "StadsplattegrondBlaeu1649",
+    url: WMTS_URL.replace("{laag}", "StadsplattegrondBlaeu1649"),
+    attribution: WMTS_ATTRIB,
     bounds: [[52.004051, 4.694818], [52.01798, 4.722507]],
+    maxNativeZoom: 18, // voorbij z18 levert de WMTS alleen lege tegels
   },
   kad1832: {
-    laag: "Kadastrale_kaart_1832",
-    bounds: [[52.004648, 4.691051], [52.015886, 4.71668]],
+    url: "https://tileserver.huc.knaw.nl/{z}/{x}/{y}",
+    attribution: "Tiles HUC KNAW",
   },
 };
 
 /** Keuzelijst voor de kaartlaag-modal (volgorde = weergavevolgorde). */
 export const BASISKAARTEN: { id: string; naam: string; jaar: string }[] = [
   { id: "pdok", naam: "Actuele kaart", jaar: "nu" },
-  { id: "deventer", naam: "Jacob van Deventer", jaar: "1572" },
-  { id: "braun", naam: "Braun en Hogenberg", jaar: "1585" },
-  { id: "kad1613", naam: "Kadastrale kaart", jaar: "1613" },
   { id: "blaeu", naam: "Blaeu", jaar: "1649" },
   { id: "kad1832", naam: "Kadastrale kaart", jaar: "1832" },
 ];
@@ -211,11 +203,11 @@ export default function Kaart({
         }
         const def = HISTORISCHE_LAGEN[id];
         if (!def) return; // "pdok": alleen de basiskaart
-        historischeLaag.current = L.tileLayer(WMTS_URL.replace("{laag}", def.laag), {
-          attribution: WMTS_ATTRIB,
-          bounds: L.latLngBounds(def.bounds),
+        historischeLaag.current = L.tileLayer(def.url, {
+          attribution: def.attribution,
+          bounds: def.bounds ? L.latLngBounds(def.bounds) : undefined,
           maxZoom: 19,
-          maxNativeZoom: 18, // voorbij z18 levert de server alleen lege tegels
+          maxNativeZoom: def.maxNativeZoom,
           zIndex: 2, // boven PDOK; de straatlijnen zitten in een eigen pane
         }).addTo(kaart);
       },

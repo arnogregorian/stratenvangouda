@@ -108,12 +108,14 @@ function leesVorigeValidators(pad) {
   try {
     const oud = new DatabaseSync(pad, { readOnly: true });
     // Schemacontrole: mist de bestaande cache.db een sinds de vorige sync
-    // toegevoegde kolom (bijv. `problematisch`), dan negeren we de validators.
-    // Zo houdt een 304 ("bron ongewijzigd") geen verouderd schema in stand,
-    // maar volgt er een volledige herbouw die de nieuwe kolom vult. Belangrijk
-    // in CI, waar cache.db van de vorige run teruggehaald wordt.
+    // toegevoegde kolom (nu `sinds`), dan negeren we de validators. Zo houdt een
+    // 304 ("bron ongewijzigd") geen verouderd schema in stand, maar volgt er een
+    // volledige herbouw die de nieuwe kolom vult. Dit forceert óók de eenmalige
+    // cache-verversing voor v1.8: de duiding verhuisde naar `genoemd_naar` en
+    // `sinds` is nieuw, terwijl de Last-Modified van de bron ongewijzigd bleef.
+    // Belangrijk in CI, waar cache.db van de vorige run teruggehaald wordt.
     const kolommen = oud.prepare("PRAGMA table_info(straten)").all();
-    if (!kolommen.some((k) => k.name === "problematisch")) {
+    if (!kolommen.some((k) => k.name === "sinds")) {
       oud.close();
       return null;
     }
@@ -203,9 +205,10 @@ async function volledigeSync(respons) {
       genoemdNaar: detail?.genoemd_naar ?? null,
       ligging: detail?.ligging ?? null,
       vermeldingen: detail?.vermeldingen ?? null,
-      // Duiding bij een naam die "naar hedendaagse opvattingen mogelijk niet
-      // door de beugel kan" (API-veld sinds v1.5.0); vaak null.
-      problematisch: detail?.problematisch ?? null,
+      // Jaartal "straat bestaat sinds" (API-veld sinds v1.8); lang niet elke
+      // straat heeft er een. De vroegere `problematisch`-duiding is deprecated
+      // en wordt door de API nu aan `genoemd_naar` geplakt (na een newline).
+      sinds: detail?.sinds ?? null,
       geometry: detail?.geometry ?? feature.geometry ?? null,
       afbeeldingen,
     });
@@ -284,7 +287,7 @@ async function volledigeSync(respons) {
       genoemd_naar TEXT,
       ligging TEXT,
       vermeldingen TEXT,
-      problematisch TEXT,
+      sinds TEXT,
       geometry TEXT
     );
     CREATE TABLE afbeeldingen (
@@ -314,7 +317,7 @@ async function volledigeSync(respons) {
   for (const s of straten) {
     voegStraatToe.run(
       s.identifier, s.slug, s.naam, s.type, JSON.stringify(s.altNamen),
-      s.genoemdNaar, s.ligging, s.vermeldingen, s.problematisch,
+      s.genoemdNaar, s.ligging, s.vermeldingen, s.sinds,
       s.geometry ? JSON.stringify(s.geometry) : null
     );
     s.afbeeldingen.forEach((a, i) => {

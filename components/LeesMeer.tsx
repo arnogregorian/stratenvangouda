@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import stijl from "./LeesMeer.module.css";
 
 const GRENS = 420;
 
 /**
  * Lange teksten worden afgekapt met een "lees meer"-toggle (RFP §4.3).
- * Tekst wordt als paragrafen weergegeven, geen tabellen.
+ * Dubbele newlines worden alinea's, enkele newlines een regelafbreking (bijv.
+ * de duiding bij problematische namen die de API sinds v1.8 aan `genoemd_naar`
+ * plakt). Geen tabellen.
  */
 export default function LeesMeer({ tekst }: { tekst: string }) {
   const [open, setOpen] = useState(false);
@@ -20,7 +22,12 @@ export default function LeesMeer({ tekst }: { tekst: string }) {
     <div>
       {zichtbaar.split(/\n\n+/).map((alinea, i) => (
         <p key={i} className={stijl.alinea}>
-          {alinea}
+          {alinea.split("\n").map((regel, j, regels) => (
+            <Fragment key={j}>
+              {regel}
+              {j < regels.length - 1 && <br />}
+            </Fragment>
+          ))}
         </p>
       ))}
       {lang && (

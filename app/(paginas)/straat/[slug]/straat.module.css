@@ -2,10 +2,30 @@
   margin-bottom: 1rem;
 }
 
+.titelRij {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.2rem;
+}
+
 .titel {
   font-size: 1.9rem;
   color: var(--kleur-primair);
-  margin: 0 0 0.2rem;
+  margin: 0;
+}
+
+/* "Sinds {jaar}"-badge naast de straatnaam. */
+.sinds {
+  display: inline-block;
+  padding: 0.15rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--kleur-primair);
+  background: var(--kleur-accent);
+  border-radius: 999px;
+  white-space: nowrap;
 }
 
 .ligging {
@@ -19,29 +39,6 @@
   font-style: italic;
 }
 
-.vermelding {
-  font-size: 0.85rem;
-  color: var(--kleur-ink-zacht);
-  border-left: 3px solid var(--kleur-lijn);
-  padding-left: 0.75rem;
-}
-
 .blok {
   margin-top: 1.75rem;
-}
-
-/* Kanttekening bij een problematische straatnaam: een rustige, amberkleurige
-   toelichtingskader (geen felle "foutmelding"). */
-.problematisch {
-  padding: 0.9rem 1rem;
-  background: #fdf6ec;
-  border: 1px solid #eed9b2;
-  border-left: 4px solid #c98a1b;
-  border-radius: 10px;
-}
-
-.problematischKop {
-  display: block;
-  margin-bottom: 0.35rem;
-  color: #8a5a10;
 }
