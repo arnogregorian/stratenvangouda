@@ -4,9 +4,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Kaart, { type KaartHandle, BASISKAARTEN } from "./Kaart";
 import Zoekveld from "./Zoekveld";
 import GpsKnop from "./GpsKnop";
-import TaalWissel from "./TaalWissel";
+// import TaalWissel from "./TaalWissel"; // Taalkiezer voorlopig verborgen
 import OfflineDownload from "./OfflineDownload";
 import { type IndexItem } from "@/lib/zoekindex";
+import {
+  laatstBezocht,
+  wisLaatstBezocht,
+  verdwenenVoorkeur,
+  zetVerdwenenVoorkeur,
+} from "@/lib/bezocht";
 import { useTaal } from "@/lib/taal";
 import stijl from "./StartScherm.module.css";
 
@@ -30,6 +36,10 @@ export default function StartScherm() {
   const [isPWA, setIsPWA] = useState(false);
   const eersteRender = useRef(true);
   const kaartApi = useRef<KaartHandle>(null);
+  // Straat waarop ingezoomd moet worden zodra de kaart klaar is (terugkeer
+  // vanaf een straatpagina, zie lib/bezocht.ts).
+  const wachtendeStraat = useRef<string | null>(null);
+  const [locatieMelding, setLocatieMelding] = useState<string | null>(null);
 
   // Alleen in de geïnstalleerde app (standalone) de offline-download tonen.
   useEffect(() => {
@@ -46,6 +56,53 @@ export default function StartScherm() {
 
   const openZoek = useCallback(() => setIntroOpen(true), []);
 
+  // Bij terugkeer vanaf een straatpagina: sla de intro over en onthoud de straat
+  // om er op in te zoomen zodra de kaart geladen is. Ook de verdwenen-voorkeur
+  // wordt hersteld (zie lib/bezocht.ts).
+  useEffect(() => {
+    const slug = laatstBezocht();
+    if (slug) {
+      wisLaatstBezocht();
+      wachtendeStraat.current = slug;
+      setIntroOpen(false);
+      setAnimGestopt(true);
+    }
+    if (verdwenenVoorkeur()) {
+      setVerdwenenAan(true);
+      setIntroOpen(false);
+      setAnimGestopt(true);
+    }
+  }, []);
+
+  // Aangeroepen door de kaart zodra de straten geladen zijn: eerst de verdwenen-
+  // laag herstellen (indien voorkeur), daarna inzoomen op de laatst bekeken straat.
+  const kaartGereed = useCallback(async () => {
+    if (verdwenenVoorkeur()) {
+      try {
+        await kaartApi.current?.zetVerdwenen(true);
+      } catch {
+        /* verdwenen-laag kon niet laden; huidige straten blijven staan */
+      }
+    }
+    const slug = wachtendeStraat.current;
+    if (slug) {
+      wachtendeStraat.current = null;
+      kaartApi.current?.zoomNaarStraat(slug);
+    }
+  }, []);
+
+  // Intro-optie "Start op mijn locatie": zoom de kaart naar de live locatie.
+  const startLocatie = useCallback(() => {
+    if (typeof window !== "undefined" && !window.isSecureContext) {
+      setLocatieMelding(t.locatieHttps);
+      return;
+    }
+    setLocatieMelding(null);
+    setIntroOpen(false);
+    setAnimGestopt(true);
+    kaartApi.current?.startLiveLocatie();
+  }, [t]);
+
   // Locator-knopje in de zoeksuggesties: niet navigeren, maar op de kaart tonen.
   const toonOpKaart = useCallback((item: IndexItem) => {
     setIntroOpen(false);
@@ -57,6 +114,7 @@ export default function StartScherm() {
   const wisselVerdwenen = useCallback(async () => {
     const nieuw = !verdwenenAan;
     setVerdwenenAan(nieuw);
+    zetVerdwenenVoorkeur(nieuw); // sessiegebonden onthouden (blijft na terugkeer)
     if (nieuw) {
       setIntroOpen(false);
       setAnimGestopt(true);
@@ -65,6 +123,7 @@ export default function StartScherm() {
       await kaartApi.current?.zetVerdwenen(nieuw);
     } catch {
       setVerdwenenAan(false); // terugdraaien als het laden mislukt
+      zetVerdwenenVoorkeur(false);
     }
   }, [verdwenenAan]);
 
@@ -119,6 +178,7 @@ export default function StartScherm() {
         ref={kaartApi}
         anim={introOpen && !animGestopt}
         onInteractie={sluitIntro}
+        onGereed={kaartGereed}
       />
 
       <button
@@ -144,9 +204,11 @@ export default function StartScherm() {
         </svg>
       </button>
 
+      {/* Taalkiezer voorlopig verborgen.
       <div className={stijl.taalHoek}>
         <TaalWissel />
       </div>
+      */}
 
       <div
         className={`${stijl.scrim} ${introOpen ? stijl.scrimOpen : ""}`}
@@ -181,6 +243,25 @@ export default function StartScherm() {
         </button>
         <h1 className={stijl.titel}>Straten van Gouda</h1>
         <p className={stijl.ondertitel}>{t.introTekst}</p>
+        <button
+          type="button"
+          className={stijl.locatieKnop}
+          onClick={startLocatie}
+        >
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 21c-4-4.5-7-8-7-11.5a7 7 0 1 1 14 0C19 13 16 16.5 12 21z" />
+            <circle cx="12" cy="9.5" r="2.5" />
+          </svg>
+          {t.startOpLocatie}
+        </button>
+        {locatieMelding && (
+          <p className={stijl.locatieMelding} aria-live="polite">
+            {locatieMelding}
+          </p>
+        )}
+        <div className={stijl.ofScheiding}>
+          <span>{t.ofScheiding}</span>
+        </div>
         <Zoekveld onLocate={toonOpKaart} />
         <p className={stijl.hint}>{t.introHint}</p>
         {isPWA && (
@@ -223,7 +304,11 @@ export default function StartScherm() {
           {t.zoek}
         </button>
 
-        <GpsKnop className={stijl.tab} label={t.mijnLocatie} />
+        <GpsKnop
+          className={stijl.tab}
+          label={t.mijnLocatie}
+          onStart={() => kaartApi.current?.startLiveLocatie()}
+        />
 
         <button
           type="button"

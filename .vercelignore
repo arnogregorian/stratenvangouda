@@ -12,10 +12,8 @@ next-env.d.ts
 # Afhankelijkheden (worden opnieuw geïnstalleerd)
 node_modules
 
-# Gegenereerde data. public/data wordt bij de build opnieuw aangemaakt.
-# data/cache.db is tijdelijk bevroren meegeleverd tijdens de API-storing (zie
-# docs/API-storing-afbeeldingen-2026-08-14.md); alleen het tmp-bestand uitsluiten.
-data/*.tmp
+# Gegenereerde data (worden bij de build opnieuw aangemaakt)
+data
 public/data
 
 # Omgeving & diversen

@@ -6,11 +6,7 @@ out/
 next-env.d.ts
 
 # gegenereerde data (public/data wordt bij de build opnieuw aangemaakt)
-# LET OP: data/cache.db is TIJDELIJK meegecommit als bevroren dataset tijdens de
-# storing van het /afbeeldingen-endpoint (docs/API-storing-afbeeldingen-2026-08-14.md).
-# Terugdraaien zodra de API hersteld is: onderstaande regel weer activeren, cache.db
-# uit git verwijderen en vercel.json terug naar `npm run sync && npm run build`.
-# data/cache.db
+data/cache.db
 data/cache.db.tmp
 public/data/
 

@@ -6,11 +6,15 @@ import {
   fotoId,
   straatViaSlug,
   SITE_URL,
+  type Afbeelding,
 } from "@/lib/straten";
 import AltNamen from "@/components/AltNamen";
 import DeelKnop from "@/components/DeelKnop";
 import FotoStrip from "@/components/FotoStrip";
 import LeesMeer from "@/components/LeesMeer";
+import MarkeerBezocht from "@/components/MarkeerBezocht";
+import StraatKaart from "@/components/StraatKaart";
+import { deringSorteerwaarde } from "@/lib/datum";
 import stijl from "./straat.module.css";
 
 export const dynamicParams = false;
@@ -32,6 +36,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const straat = straatViaSlug(slug);
   if (!straat) return {};
+  // Deelafbeelding (OpenGraph, bijv. LinkedIn): de meest recente foto van deze
+  // straat — herkenbaarder dan een generieke afbeelding.
+  const recentste = afbeeldingenVoorStraat(straat.identifier).reduce<Afbeelding | null>(
+    (beste, f) =>
+      !beste ||
+      deringSorteerwaarde(f.datering) > deringSorteerwaarde(beste.datering)
+        ? f
+        : beste,
+    null
+  );
+  const ogAfbeelding = recentste?.image ?? recentste?.thumbnail ?? null;
   return {
     title: straat.naam,
     description: samenvatting(straat.genoemdNaar),
@@ -42,7 +57,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: `/straat/${slug}/`,
       type: "article",
       locale: "nl_NL",
+      images: ogAfbeelding ? [ogAfbeelding] : undefined,
     },
+    twitter: ogAfbeelding
+      ? { card: "summary_large_image", images: [ogAfbeelding] }
+      : undefined,
   };
 }
 
@@ -99,6 +118,7 @@ export default async function StraatPagina({ params }: Props) {
 
   return (
     <main id="inhoud" className="pagina">
+      <MarkeerBezocht slug={slug} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -118,17 +138,6 @@ export default async function StraatPagina({ params }: Props) {
           </p>
         )}
 
-        {/*
-          RFP §4.3 noemt ook leeftijd/jaartal en wijk. Deze velden zitten nog
-          niet in de Straatnamen API (afstemmen met Gouda Tijdmachine); zodra
-          beschikbaar hier tonen.
-        */}
-        {straat.vermeldingen && (
-          <p className={stijl.vermelding}>
-            <strong>Vermelding:</strong> {straat.vermeldingen}
-          </p>
-        )}
-
         <div className={stijl.blok}>
           <AltNamen namen={straat.altNamen} />
         </div>
@@ -137,9 +146,37 @@ export default async function StraatPagina({ params }: Props) {
           <DeelKnop titel={`${straat.naam} — Straten van Gouda`} />
         </div>
 
+        {/* Kaartje met de straat gemarkeerd: na de tekst, vóór de afbeeldingen. */}
+        {straat.geometry && (
+          <div className={stijl.blok}>
+            <StraatKaart geometry={straat.geometry} naam={straat.naam} />
+          </div>
+        )}
+
+        {/* Kanttekening bij een problematische straatnaam, net boven de beelden. */}
+        {straat.problematisch && (
+          <aside className={`${stijl.blok} ${stijl.problematisch}`}>
+            <strong className={stijl.problematischKop}>
+              Kanttekening bij deze straatnaam
+            </strong>
+            <LeesMeer tekst={straat.problematisch} />
+          </aside>
+        )}
+
         <div className={stijl.blok}>
           <FotoStrip eerste={eersteFotos} totaal={alleFotos.length} slug={slug} />
         </div>
+
+        {/*
+          RFP §4.3 noemt ook leeftijd/jaartal en wijk. Deze velden zitten nog
+          niet in de Straatnamen API (afstemmen met Gouda Tijdmachine); zodra
+          beschikbaar hier tonen. De vermelding staat onderaan de pagina.
+        */}
+        {straat.vermeldingen && (
+          <p className={`${stijl.blok} ${stijl.vermelding}`}>
+            <strong>Vermelding:</strong> {straat.vermeldingen}
+          </p>
+        )}
       </article>
     </main>
   );

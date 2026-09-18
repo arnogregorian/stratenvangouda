@@ -68,8 +68,15 @@ location / {
 cron, bijvoorbeeld om 04:30:
 
 ```cron
-30 4 * * * cd /var/www/stratenvangouda && npm run sync && npm run build && rsync -a --delete out/ /var/www/stratenvangouda/live/
+30 4 * * * cd /var/www/stratenvangouda && node scripts/sync.mjs --alleen-bij-wijziging && npm run build && rsync -a --delete out/ /var/www/stratenvangouda/live/
 ```
+
+De sync stuurt de cache-validators (`ETag`/`Last-Modified`, API v1.5.0) van de
+vorige run mee. Is er bij de bron niets gewijzigd, dan antwoordt de API met
+304 Not Modified en eindigt de sync met exitcode 3: de keten stopt en de
+herbouw wordt die dag overgeslagen. Zonder `--alleen-bij-wijziging` eindigt een
+ongewijzigde run gewoon met exitcode 0 (handig voor `npm run sync` lokaal en op
+Vercel, waar de build sowieso moet doorlopen).
 
 Publiceer atomisch (rsync naar de live-map of symlink-wissel) zodat bezoekers
 nooit een half-gebouwde site zien. Faalt de sync, dan blijft de vorige versie

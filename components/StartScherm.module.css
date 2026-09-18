@@ -5,10 +5,19 @@
   overflow: hidden;
 }
 
-/* Leaflet-bedieningen (zoomknoppen linksonder, attributie rechtsonder) boven
-   de vaste onderbalk tillen zodat ze bereikbaar en zichtbaar blijven. */
+/* Attributie (rechtsonder) boven de vaste onderbalk tillen zodat ze zichtbaar
+   blijft. */
 .scherm :global(.leaflet-bottom) {
   margin-bottom: var(--balk-hoogte);
+}
+
+/* Zoomknoppen (+/−) verticaal gecentreerd op de linkerrand — Kaart plaatst ze
+   op 'topleft'. Zo vallen ze nooit achter de vaste onderbalk (voorheen
+   linksonder). */
+.scherm :global(.leaflet-top.leaflet-left) {
+  top: 50%;
+  bottom: auto;
+  transform: translateY(-50%);
 }
 
 /* Zachte verdonkering achter de introkaart; puur visueel (pointer-events uit)
@@ -99,6 +108,59 @@
   color: var(--kleur-ink-zacht);
 }
 
+/* Intro-startoptie: "Start op mijn locatie". */
+.locatieKnop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 0.3rem;
+  padding: 0.7rem 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--kleur-wit);
+  background: var(--kleur-primair);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.locatieKnop:hover {
+  background: var(--kleur-primair-donker);
+}
+
+.locatieKnop svg {
+  display: block;
+}
+
+.locatieMelding {
+  margin: 0.55rem 0 0;
+  font-size: 0.85rem;
+  color: var(--kleur-primair-donker);
+}
+
+/* "of"-scheiding tussen de twee startopties (locatie ⇄ zoeken). */
+.ofScheiding {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.9rem 0;
+  color: var(--kleur-ink-zacht);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.ofScheiding::before,
+.ofScheiding::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--kleur-lijn);
+}
+
 /* Offline-opslaan (alleen zichtbaar als de app als PWA draait). */
 .offlineKnop {
   display: flex;
@@ -132,6 +194,9 @@
   display: flex;
   align-items: stretch;
   gap: 0.25rem;
+  /* Zelfde hoogtetoken als de NavFooter, zodat de onderbalk niet van hoogte
+     verspringt tussen de homepage en de inhoudspagina's. */
+  height: calc(var(--footer-hoogte) + env(safe-area-inset-bottom));
   padding: 0.4rem 0.5rem;
   padding-bottom: calc(0.4rem + env(safe-area-inset-bottom));
   background: rgba(255, 255, 255, 0.97);

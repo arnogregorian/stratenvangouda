@@ -6,7 +6,13 @@ StratenVanGouda.nl is een initiatief van de **Historische Vereniging Die Goude**
 
 Deze website is mede mogelijk gemaakt met subsidie van de **gemeente Gouda**.
 
-<!-- Logo's van Die Goude, Streekarchief Midden-Holland, Gouda Tijdmachine en gemeente Gouda worden hier geplaatst zodra aangeleverd. -->
+<div class="colofon-logos">
+  <a href="https://www.diegoude.nl/"><img src="/logos/die-goude-logo.svg" alt="Historische Vereniging Die Goude" width="670" height="452"></a>
+  <a href="https://samh.nl/"><img src="/logos/streekarchief-midden-holland.svg" alt="Streekarchief Midden-Holland" width="240" height="260"></a>
+  <a href="https://www.goudatijdmachine.nl/"><img src="/logos/gouda-tijdmachine.svg" alt="Gouda Tijdmachine" width="521" height="517"></a>
+</div>
+
+<!-- Of het logo van de gemeente Gouda wordt opgenomen, wordt nog besproken (Bob, sept 2026). -->
 
 ## Privacy
 

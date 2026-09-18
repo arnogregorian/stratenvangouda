@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useImperativeHandle, useRef, useState } from "react";
-import type { Map as LeafletMap, Polyline, GeoJSON, TileLayer } from "leaflet";
+import type {
+  Map as LeafletMap,
+  Polyline,
+  GeoJSON,
+  TileLayer,
+  CircleMarker,
+  Circle,
+} from "leaflet";
+import { bezochteSlugs } from "@/lib/bezocht";
 
 // PDOK BRT-Achtergrondkaart (RFP §6.2): open data van het Kadaster, geen
 // Google Maps. Attributie verplicht.
@@ -12,15 +20,54 @@ const ATTRIBUTIE =
 const GOUDA_CENTRUM: [number, number] = [52.0115, 4.7105];
 const START_ZOOM = 16;
 
-// Historische kaartondergronden (WMS, Gemeente Gouda) als alternatief voor PDOK.
-const WMS_URL = "https://gis.gouda.nl/geoserver/CHRASTER/wms?";
-const WMS_ATTRIB = "<a href='https://gis.gouda.nl'>Gemeente Gouda</a>";
-const WMS_LAGEN: Record<string, string> = {
-  deventer: "Jacob_van_Deventer",
-  braun: "braun_hogenberg",
-  kad1613: "Kadastrale_kaart_1613",
-  blaeu: "StadsplattegrondBlaeu1649",
-  kad1832: "Kadastrale_kaart_1832",
+// Straatlijnen: normale kleur en een donkerder tint voor straten die deze sessie
+// al bekeken zijn (zie lib/bezocht.ts).
+const STRAAT_KLEUR = "#d32016";
+const STRAAT_KLEUR_BEZOCHT = "#8f1610";
+// Live-locatie: blauwe stip + nauwkeurigheidscirkel, contrasteert met de straten.
+const LOCATIE_KLEUR = "#1d6fd6";
+const LOCATIE_OPTIES = {
+  watch: true,
+  setView: true,
+  maxZoom: 17,
+  enableHighAccuracy: true,
+} as const;
+
+// Historische kaarten (Gemeente Gouda) via de GeoWebCache-WMTS in het native
+// EPSG:900913-tegelgrid (= 3857). De eerdere losse WMS-aanroep liet GeoServer
+// per 256px-tegel herprojecteren, met witte verticale strepen als gevolg.
+const WMTS_URL =
+  "https://gis.gouda.nl/geoserver/gwc/service/wmts?Service=WMTS&Request=GetTile&Version=1.0.0" +
+  "&Layer=CHRASTER:{laag}&Style=&TileMatrixSet=EPSG:900913&Format=image/png" +
+  "&TileMatrix=EPSG:900913:{z}&TileCol={x}&TileRow={y}";
+const WMTS_ATTRIB = "<a href='https://gis.gouda.nl'>Gemeente Gouda</a>";
+// Dekking per laag ([[zuid, west], [noord, oost]]) uit de WMTS GetCapabilities.
+// Buiten deze bounds geeft GeoWebCache een 400 in plaats van een lege tegel,
+// dus zonder bounds zou Leaflet daar kapotte tegels tonen.
+const HISTORISCHE_LAGEN: Record<
+  string,
+  { laag: string; bounds: [[number, number], [number, number]] }
+> = {
+  deventer: {
+    laag: "Jacob_van_Deventer",
+    bounds: [[51.993145, 4.691862], [52.024551, 4.734236]],
+  },
+  braun: {
+    laag: "braun_hogenberg",
+    bounds: [[52.00248, 4.693115], [52.019487, 4.727399]],
+  },
+  kad1613: {
+    laag: "Kadastrale_kaart_1613",
+    bounds: [[51.989246, 4.662473], [52.033667, 4.741551]],
+  },
+  blaeu: {
+    laag: "StadsplattegrondBlaeu1649",
+    bounds: [[52.004051, 4.694818], [52.01798, 4.722507]],
+  },
+  kad1832: {
+    laag: "Kadastrale_kaart_1832",
+    bounds: [[52.004648, 4.691051], [52.015886, 4.71668]],
+  },
 };
 
 /** Keuzelijst voor de kaartlaag-modal (volgorde = weergavevolgorde). */
@@ -40,6 +87,8 @@ export type KaartHandle = {
   zetVerdwenen: (aan: boolean) => Promise<void>;
   /** Wissel de kaartondergrond (zie BASISKAARTEN). */
   zetBasiskaart: (id: string) => Promise<void>;
+  /** Vraag de live locatie op, toon een stip en zoom er (blijvend) naartoe. */
+  startLiveLocatie: () => void;
 };
 
 type Props = {
@@ -47,10 +96,17 @@ type Props = {
   anim?: boolean;
   /** Aangeroepen zodra de bezoeker zélf met de kaart begint te interacteren. */
   onInteractie?: () => void;
+  /** Aangeroepen zodra de straten geladen zijn (voor "zoom bij terugkeer"). */
+  onGereed?: () => void;
   ref?: React.Ref<KaartHandle>;
 };
 
-export default function Kaart({ anim = false, onInteractie, ref }: Props) {
+export default function Kaart({
+  anim = false,
+  onInteractie,
+  onGereed,
+  ref,
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const kaartRef = useRef<LeafletMap | null>(null);
   // Straatlijnen op slug, plus de nu gemarkeerde lijn (voor het locator-knopje).
@@ -58,7 +114,16 @@ export default function Kaart({ anim = false, onInteractie, ref }: Props) {
   const gemarkeerd = useRef<Polyline | null>(null);
   const stratenLaag = useRef<GeoJSON | null>(null);
   const verdwenenLaag = useRef<GeoJSON | null>(null);
-  const basiskaartLaag = useRef<TileLayer | null>(null);
+  const historischeLaag = useRef<TileLayer | null>(null);
+  // Live-locatie: stip + nauwkeurigheidscirkel, plus een vlag als er om locatie
+  // gevraagd is vóór de kaart klaar was.
+  const locatieMarker = useRef<CircleMarker | null>(null);
+  const locatieCirkel = useRef<Circle | null>(null);
+  const wilLocatie = useRef(false);
+  // Laatste onGereed-callback in een ref, zodat de init-effect niet opnieuw hoeft
+  // te draaien als de prop van identiteit verandert.
+  const onGereedRef = useRef(onGereed);
+  onGereedRef.current = onGereed;
   const [gereed, setGereed] = useState(false);
 
   useImperativeHandle(
@@ -113,6 +178,9 @@ export default function Kaart({ anim = false, onInteractie, ref }: Props) {
                 naam: string;
                 slug: string;
               };
+              // Ook verdwenen lijnen opzoekbaar maken, zodat de homepage er bij
+              // terugkeer op kan inzoomen (zie zoomNaarStraat).
+              laagPerSlug.current[slug] = laag as Polyline;
               laag.bindTooltip(naam, { sticky: true, direction: "top" });
               laag.on("click", () => {
                 window.location.href = `/straat/${slug}/`;
@@ -134,17 +202,31 @@ export default function Kaart({ anim = false, onInteractie, ref }: Props) {
         const kaart = kaartRef.current;
         if (!kaart) return;
         const L = (await import("leaflet")).default;
-        const nieuw =
-          id === "pdok" || !WMS_LAGEN[id]
-            ? L.tileLayer(PDOK_TILES, { attribution: ATTRIBUTIE, maxZoom: 19, minZoom: 11 })
-            : L.tileLayer.wms(WMS_URL, {
-                layers: WMS_LAGEN[id],
-                attribution: WMS_ATTRIB,
-              });
-        if (basiskaartLaag.current) kaart.removeLayer(basiskaartLaag.current);
-        nieuw.addTo(kaart);
-        nieuw.bringToBack(); // onder de straatlijnen houden
-        basiskaartLaag.current = nieuw;
+        // De historische kaart ligt als overlay óp PDOK in plaats van ervoor
+        // in de plaats: buiten de dekking van de oude kaart (bijv. Westergouwe)
+        // blijft zo de actuele kaart zichtbaar in plaats van een leeg vlak.
+        if (historischeLaag.current) {
+          kaart.removeLayer(historischeLaag.current);
+          historischeLaag.current = null;
+        }
+        const def = HISTORISCHE_LAGEN[id];
+        if (!def) return; // "pdok": alleen de basiskaart
+        historischeLaag.current = L.tileLayer(WMTS_URL.replace("{laag}", def.laag), {
+          attribution: WMTS_ATTRIB,
+          bounds: L.latLngBounds(def.bounds),
+          maxZoom: 19,
+          maxNativeZoom: 18, // voorbij z18 levert de server alleen lege tegels
+          zIndex: 2, // boven PDOK; de straatlijnen zitten in een eigen pane
+        }).addTo(kaart);
+      },
+      startLiveLocatie() {
+        const kaart = kaartRef.current;
+        if (!kaart) {
+          // Kaart nog aan het laden: onthoud de wens en start zodra hij klaar is.
+          wilLocatie.current = true;
+          return;
+        }
+        kaart.locate(LOCATIE_OPTIES);
       },
     }),
     []
@@ -169,19 +251,66 @@ export default function Kaart({ anim = false, onInteractie, ref }: Props) {
         renderer: L.canvas({ tolerance: 12 }),
       });
       kaartRef.current = kaart;
-      L.control.zoom({ position: "bottomleft" }).addTo(kaart);
-      basiskaartLaag.current = L.tileLayer(PDOK_TILES, {
+      // Zoomknoppen verticaal gecentreerd op de linkerrand (via CSS in
+      // StartScherm.module.css), zodat ze niet achter de vaste onderbalk vallen.
+      L.control.zoom({ position: "topleft" }).addTo(kaart);
+      L.tileLayer(PDOK_TILES, {
         attribution: ATTRIBUTIE,
         maxZoom: 19,
         minZoom: 11,
       }).addTo(kaart);
 
+      // Live-locatie: markeer de positie met een blauwe stip + nauwkeurigheids-
+      // cirkel en volg mee (watch). De aanvraag komt van de intro of de
+      // onderbalkknop via startLiveLocatie().
+      kaart.on("locationfound", (e) => {
+        const straal = e.accuracy ?? 20;
+        if (locatieCirkel.current && locatieMarker.current) {
+          locatieCirkel.current.setLatLng(e.latlng).setRadius(straal);
+          locatieMarker.current.setLatLng(e.latlng);
+        } else {
+          locatieCirkel.current = L.circle(e.latlng, {
+            radius: straal,
+            color: LOCATIE_KLEUR,
+            weight: 1,
+            fillColor: LOCATIE_KLEUR,
+            fillOpacity: 0.15,
+            interactive: false,
+          }).addTo(kaart);
+          locatieMarker.current = L.circleMarker(e.latlng, {
+            radius: 7,
+            color: "#ffffff",
+            weight: 2,
+            fillColor: LOCATIE_KLEUR,
+            fillOpacity: 1,
+            interactive: false,
+          }).addTo(kaart);
+        }
+      });
+      // Als er om locatie gevraagd is vóór de kaart klaar was: nu alsnog starten.
+      if (wilLocatie.current) {
+        wilLocatie.current = false;
+        kaart.locate(LOCATIE_OPTIES);
+      }
+
       const antwoord = await fetch("/data/straten.geojson");
       if (!antwoord.ok || gestopt) return;
       const geojson = await antwoord.json();
 
+      // Deze sessie al bekeken straten krijgen een donkerder tint ("bezochte
+      // links"). Eén keer uitlezen bij het opbouwen van de laag.
+      const bezocht = bezochteSlugs();
+
       stratenLaag.current = L.geoJSON(geojson, {
-        style: { color: "#d32016", weight: 5, opacity: 0.75 },
+        style: (feature) => ({
+          color:
+            feature &&
+            bezocht.has((feature.properties as { slug: string }).slug)
+              ? STRAAT_KLEUR_BEZOCHT
+              : STRAAT_KLEUR,
+          weight: 5,
+          opacity: 0.75,
+        }),
         onEachFeature: (feature, laag) => {
           const { naam, slug } = feature.properties as {
             naam: string;
@@ -201,13 +330,19 @@ export default function Kaart({ anim = false, onInteractie, ref }: Props) {
         },
       }).addTo(kaart);
 
-      if (!gestopt) setGereed(true);
+      if (!gestopt) {
+        setGereed(true);
+        onGereedRef.current?.();
+      }
     })();
 
     return () => {
       gestopt = true;
+      kaartRef.current?.stopLocate();
       kaartRef.current?.remove();
       kaartRef.current = null;
+      locatieMarker.current = null;
+      locatieCirkel.current = null;
     };
   }, []);
 

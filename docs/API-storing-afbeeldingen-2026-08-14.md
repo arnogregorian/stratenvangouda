@@ -1,5 +1,12 @@
 # Storingsmelding — `/afbeeldingen/{identifier}` geeft 404 voor álle straten
 
+> **OPGELOST — 3 september 2026.** Verholpen in API v1.5.0
+> ([commit `14ec8e3`](https://github.com/gouda-tijdmachine/api-straatnamen/commit/14ec8e32b6f4e6eabd3d78279f45fef37fae0e68)):
+> de vereiste thumbnail-property was uit de RDF-export verdwenen; de thumbnail komt nu
+> uit dezelfde IIIF-bron als het image-veld. De tijdelijk bevroren `data/cache.db` is
+> weer uit git en de Vercel-build draait weer `npm run sync && npm run build`.
+> Dit document blijft staan als naslag.
+
 **Aan:** Richard de Jongh, Bob Coret (technisch aanspreekpunt Gouda Tijdmachine)
 **Van:** Webroots B.V. (arno@webroots.nl), bouwer van StratenVanGouda.nl
 **Datum:** 14 augustus 2026

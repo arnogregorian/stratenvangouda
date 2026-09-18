@@ -10,6 +10,7 @@ export type Straat = {
   genoemdNaar: string | null;
   ligging: string | null;
   vermeldingen: string | null;
+  problematisch: string | null;
   geometry: GeoJSON.Geometry | null;
 };
 
@@ -47,6 +48,7 @@ function naarStraat(rij: any): Straat {
     genoemdNaar: rij.genoemd_naar,
     ligging: rij.ligging,
     vermeldingen: rij.vermeldingen,
+    problematisch: rij.problematisch ?? null,
     geometry: rij.geometry ? JSON.parse(rij.geometry) : null,
   };
 }

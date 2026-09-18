@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { afstandMeters, laadIndex, type IndexItem } from "@/lib/zoekindex";
 import { useTaal } from "@/lib/taal";
 import stijl from "./GpsKnop.module.css";
@@ -12,6 +13,8 @@ type Props = {
   className?: string;
   /** Label naast het icoon (kort in de onderbalk). */
   label?: string;
+  /** Aangeroepen bij een klik: laat bijv. de kaart naar de live locatie inzoomen. */
+  onStart?: () => void;
 };
 
 /**
@@ -22,6 +25,7 @@ type Props = {
 export default function GpsKnop({
   className,
   label = "Straten in mijn buurt",
+  onStart,
 }: Props) {
   const { t } = useTaal();
   const [open, setOpen] = useState(false);
@@ -38,6 +42,15 @@ export default function GpsKnop({
       setBezig(false);
       return;
     }
+    if (!window.isSecureContext) {
+      // Buiten een beveiligde context (https/localhost) geeft geolocatie geen
+      // prompt maar een stille weigering — toon een duidelijke melding.
+      setFout(t.locatieHttps);
+      setBezig(false);
+      return;
+    }
+    // Laat ook de kaart eronder naar de live locatie inzoomen.
+    onStart?.();
     navigator.geolocation.getCurrentPosition(
       async (positie) => {
         try {
@@ -89,7 +102,11 @@ export default function GpsKnop({
         {label}
       </button>
 
-      {open && (
+      {/* Via een portal naar <body> zodat de gecentreerde modal niet gevangen
+          raakt in de containing block van de onderbalk (die `backdrop-filter`
+          gebruikt en zo een fixed-descendant aan zich bindt). */}
+      {open &&
+        createPortal(
         <div
           role="dialog"
           aria-modal="true"
@@ -129,8 +146,9 @@ export default function GpsKnop({
               </ul>
             )}
           </div>
-        </div>
-      )}
+        </div>,
+          document.body
+        )}
     </>
   );
 }

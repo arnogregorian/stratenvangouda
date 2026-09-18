@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type OpenSeadragon from "openseadragon";
 import { laadFotos, type Foto } from "@/lib/fotos";
+import { formatteerDatering } from "@/lib/datum";
 import stijl from "./FotoViewer.module.css";
 
 /**
@@ -103,7 +104,7 @@ export default function FotoViewer({
     );
   }
 
-  const bron = [foto.vervaardiger, foto.datering, foto.bron]
+  const bron = [foto.vervaardiger, formatteerDatering(foto.datering), foto.bron]
     .filter(Boolean)
     .join(" · ");
 

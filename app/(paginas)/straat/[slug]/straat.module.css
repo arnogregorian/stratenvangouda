@@ -29,3 +29,19 @@
 .blok {
   margin-top: 1.75rem;
 }
+
+/* Kanttekening bij een problematische straatnaam: een rustige, amberkleurige
+   toelichtingskader (geen felle "foutmelding"). */
+.problematisch {
+  padding: 0.9rem 1rem;
+  background: #fdf6ec;
+  border: 1px solid #eed9b2;
+  border-left: 4px solid #c98a1b;
+  border-radius: 10px;
+}
+
+.problematischKop {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #8a5a10;
+}

@@ -1,6 +1,26 @@
+.balk {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
 .kop {
   font-size: 1.15rem;
-  margin: 0 0 0.75rem;
+  margin: 0;
+}
+
+.sorteer select {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.55rem;
+  color: var(--kleur-ink);
+  background: var(--kleur-wit);
+  border: 1px solid var(--kleur-lijn);
+  border-radius: 8px;
+  cursor: pointer;
 }
 
 .aantal {

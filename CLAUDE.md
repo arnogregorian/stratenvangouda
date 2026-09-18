@@ -17,6 +17,7 @@ npm run dev                 # http://localhost:3000 (needs cache.db to exist)
 npm run build               # static export → out/
 npm run serve               # serve the out/ export locally (npx serve out)
 node scripts/exporteer.mjs  # regenerate public/data/ from existing cache.db, no re-fetch
+node scripts/sync.mjs --alleen-bij-wijziging  # conditional sync: exit 3 when source unchanged (daily cron chain)
 ```
 
 - **`npm run sync` must run before `dev` or `build`.** `data/cache.db` is gitignored and must be built first; the Next app reads it synchronously at render time and will fail without it.
@@ -61,6 +62,8 @@ The live Gouda Tijdmachine API (`https://api-straatnamen.goudatijdmachine.nl`, r
 - `naam_alt` (list) vs `alt_names` (detail); `naam_alt` arrives as an array containing one comma-separated string → `normaliseerAltNamen()` flattens both.
 - Photo source-org field has a typo in the API (`bronbronorganisatie`); the code accepts both spellings.
 - Writes go to `cache.db.tmp` then `renameSync` for atomic swap, so a failed sync leaves the previous DB intact.
+- Since API v1.5.0 all endpoints send `Last-Modified`/`ETag` (on `/straatnamen` they cover the whole collection including linked images) and honour conditional requests with 304. Sync stores the validators in cache.db's `meta` table (`bron_etag`, `bron_last_modified`) and short-circuits on 304; with `--alleen-bij-wijziging` it then exits 3 so a cron chain can skip the rebuild.
+- Never call `process.exit()` in `sync.mjs` — it crashes on Windows (libuv assert) while network handles are still open. Set `process.exitCode` and let the process end naturally.
 
 ## Not yet available from the API
 
