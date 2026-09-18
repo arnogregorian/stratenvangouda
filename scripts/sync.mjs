@@ -34,8 +34,13 @@ const alleenBijWijziging = process.argv.includes("--alleen-bij-wijziging");
 /** Sentinel voor een 304 Not Modified-antwoord van de bron. */
 const ONGEWIJZIGD = Symbol("bron ongewijzigd");
 
+// Meer dan één poging omdat de bron soms kort instabiel is (connect-timeouts /
+// ECONNRESET), met name vlak na een API-deploy. Eén hapering mag de hele sync
+// van ~1300 straten niet laten mislukken.
+const API_POGINGEN = 5;
+
 async function apiGet(path, accept = "application/json", { conditioneel = null, metHeaders = false } = {}) {
-  for (let poging = 1; poging <= 3; poging++) {
+  for (let poging = 1; poging <= API_POGINGEN; poging++) {
     try {
       const headers = { Accept: accept, "User-Agent": "StratenVanGouda-sync (Webroots, arno@webroots.nl)" };
       // Beide validators meesturen; If-None-Match gaat voor (RFC 9110).
@@ -55,8 +60,9 @@ async function apiGet(path, accept = "application/json", { conditioneel = null, 
         ? { data, etag: res.headers.get("etag"), lastModified: res.headers.get("last-modified") }
         : data;
     } catch (err) {
-      if (poging === 3) throw err;
-      await new Promise((r) => setTimeout(r, 1000 * poging));
+      if (poging === API_POGINGEN) throw err;
+      // Exponentiële backoff: 1s, 2s, 4s, 8s tussen de pogingen.
+      await new Promise((r) => setTimeout(r, 1000 * 2 ** (poging - 1)));
     }
   }
 }
