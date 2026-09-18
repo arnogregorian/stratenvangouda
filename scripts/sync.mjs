@@ -214,7 +214,12 @@ async function volledigeSync(respons) {
       // Jaartal "straat bestaat sinds" (API-veld sinds v1.8); lang niet elke
       // straat heeft er een. De vroegere `problematisch`-duiding is deprecated
       // en wordt door de API nu aan `genoemd_naar` geplakt (na een newline).
-      sinds: detail?.sinds ?? null,
+      // Als schoon jaartal-string opslaan, zodat node:sqlite er geen REAL
+      // ("1954.0") van maakt in de TEXT-kolom.
+      sinds:
+        detail?.sinds != null && Number.isFinite(Number(detail.sinds))
+          ? String(Math.trunc(Number(detail.sinds)))
+          : null,
       geometry: detail?.geometry ?? feature.geometry ?? null,
       afbeeldingen,
     });

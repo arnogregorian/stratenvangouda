@@ -48,7 +48,12 @@ function naarStraat(rij: any): Straat {
     genoemdNaar: rij.genoemd_naar,
     ligging: rij.ligging,
     vermeldingen: rij.vermeldingen,
-    sinds: rij.sinds ?? null,
+    // De bron levert een jaartal; node:sqlite kan het als REAL opslaan ("1954.0").
+    // Normaliseren naar een schoon jaartal ("1954").
+    sinds:
+      rij.sinds != null && Number.isFinite(Number(rij.sinds))
+        ? String(Math.trunc(Number(rij.sinds)))
+        : rij.sinds ?? null,
     geometry: rij.geometry ? JSON.parse(rij.geometry) : null,
   };
 }
