@@ -90,12 +90,16 @@ jobs:
           NEXT_PUBLIC_MATOMO_URL: https://stats.diegoude.nl
           NEXT_PUBLIC_MATOMO_SITE_ID: "1"
 
-      # Spiegelt out/ naar de webmap. --ignore-time vergelijkt op grootte:
-      # elke build geeft alle bestanden nieuwe tijdstempels, dus op tijd
-      # vergelijken zou dagelijks alle ~30k bestanden opnieuw uploaden (ruim
-      # anderhalf uur over FTP). Bewust géén --delete zolang de build-id per
-      # build wisselt: reeds geüploade pagina's verwijzen naar hun eigen
-      # _next/static/<buildId>/-manifest en die moeten blijven staan.
+      # Spiegelt out/ naar de webmap in twee passes. Pass 1 (--ignore-time)
+      # vergelijkt op grootte: elke build geeft alle bestanden nieuwe tijd-
+      # stempels, dus op tijd vergelijken zou dagelijks alle ~30k bestanden
+      # opnieuw uploaden (ruim anderhalf uur over FTP). Nadeel: HTML-pagina's
+      # houden bij een nieuwe build vaak dezelfde grootte (alleen de build-id/
+      # chunk-hash in de verwijzingen wijzigt) en worden dan overgeslagen —
+      # daardoor bleef de homepage naar oude chunks verwijzen. Pass 2 uploadt
+      # daarom alle *.html opnieuw op tijd. Bewust géén --delete zolang de
+      # build-id per build wisselt: reeds geüploade pagina's verwijzen naar hun
+      # eigen _next/static/<buildId>/-manifest en die moeten blijven staan.
       # .well-known blijft uitgesloten (acme-challenge van de hoster); de
       # .htaccess gaat sinds 11 sept 2026 juist wél mee, want de versie in
       # de repository (public/.htaccess) is leidend.
@@ -155,7 +159,14 @@ jobs:
           set net:max-retries 2
           set net:persist-retries 2
           set cmd:fail-exit true
+          # Pass 1 (op grootte, snel): _next/static is content-hashed en immutable,
+          # dus nieuwe builds voegen enkel nieuwe bestanden toe.
           mirror -R --ignore-time --parallel=5 --exclude-glob .ftpquota --exclude-glob .well-known/ out/ /
+          # Pass 2 (alleen *.html, op tijd): pagina's houden bij een nieuwe build
+          # vaak dezelfde grootte (enkel de build-id/chunk-hash in de verwijzingen
+          # wijzigt), dus pass 1 slaat ze over en bleef de oude HTML naar oude
+          # chunks wijzen. Op tijd vergelijken dwingt de herupload af.
+          mirror -R --parallel=5 --include '\.html$' --exclude '.*' out/ /
           bye
           LFTP
 
