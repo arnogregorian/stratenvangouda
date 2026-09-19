@@ -162,11 +162,14 @@ jobs:
           # Pass 1 (op grootte, snel): _next/static is content-hashed en immutable,
           # dus nieuwe builds voegen enkel nieuwe bestanden toe.
           mirror -R --ignore-time --parallel=5 --exclude-glob .ftpquota --exclude-glob .well-known/ out/ /
-          # Pass 2 (alleen *.html, op tijd): pagina's houden bij een nieuwe build
-          # vaak dezelfde grootte (enkel de build-id/chunk-hash in de verwijzingen
-          # wijzigt), dus pass 1 slaat ze over en bleef de oude HTML naar oude
-          # chunks wijzen. Op tijd vergelijken dwingt de herupload af.
-          mirror -R --parallel=5 --include '\.html$' --exclude '.*' out/ /
+          # Pass 2 (alles behalve _next, op tijd): HTML-pagina's houden bij een
+          # nieuwe build vaak dezelfde grootte (enkel de build-id/chunk-hash in de
+          # verwijzingen wijzigt), dus pass 1 slaat ze over en bleef de oude HTML
+          # naar oude chunks wijzen. Een verse build geeft alle bestanden nieuwe
+          # tijdstempels, dus op tijd vergelijken (zónder --ignore-time) dwingt de
+          # herupload af. _next/static is content-hashed (pass 1 dekt dat al en het
+          # is te groot om elke keer te heruploaden), dus die blijft uitgesloten.
+          mirror -R --parallel=5 --exclude-glob _next/ --exclude-glob .ftpquota --exclude-glob .well-known/ out/ /
           bye
           LFTP
 
