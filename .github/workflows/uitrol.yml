@@ -162,14 +162,17 @@ jobs:
           # Pass 1 (op grootte, snel): _next/static is content-hashed en immutable,
           # dus nieuwe builds voegen enkel nieuwe bestanden toe.
           mirror -R --ignore-time --parallel=5 --exclude-glob .ftpquota --exclude-glob .well-known/ out/ /
-          # Pass 2 (alles behalve _next, op tijd): HTML-pagina's houden bij een
-          # nieuwe build vaak dezelfde grootte (enkel de build-id/chunk-hash in de
-          # verwijzingen wijzigt), dus pass 1 slaat ze over en bleef de oude HTML
-          # naar oude chunks wijzen. Een verse build geeft alle bestanden nieuwe
-          # tijdstempels, dus op tijd vergelijken (zónder --ignore-time) dwingt de
-          # herupload af. _next/static is content-hashed (pass 1 dekt dat al en het
-          # is te groot om elke keer te heruploaden), dus die blijft uitgesloten.
-          mirror -R --parallel=5 --exclude-glob _next/ --exclude-glob .ftpquota --exclude-glob .well-known/ out/ /
+          # Pass 2 (HTML op tijd): HTML-pagina's houden bij een nieuwe build vaak
+          # dezelfde grootte (enkel de build-id/chunk-hash in de verwijzingen
+          # wijzigt), dus pass 1 slaat ze over en bleef de oude HTML naar oude
+          # chunks wijzen. Een verse build geeft alle bestanden nieuwe tijdstempels,
+          # dus op tijd vergelijken (zónder --ignore-time) dwingt de herupload af.
+          # _next/ en data/ blijven uitgesloten: _next is content-hashed en te groot
+          # om te heruploaden, en data-bestanden dekt pass 1 al op grootte. Let op:
+          # exclude via regex (--exclude), níet --exclude-glob — een glob met
+          # trailing slash sluit de submap hier niet uit (dan wordt tóch alles
+          # opnieuw geüpload).
+          mirror -R --parallel=5 --exclude '_next/' --exclude 'data/' --exclude-glob .ftpquota --exclude-glob .well-known/ out/ /
           bye
           LFTP
 
