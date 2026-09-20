@@ -87,7 +87,8 @@ export default function StartScherm() {
     const slug = wachtendeStraat.current;
     if (slug) {
       wachtendeStraat.current = null;
-      kaartApi.current?.zoomNaarStraat(slug);
+      // Alleen markeren; de exacte viewport komt uit de URL-hash (terug-navigatie).
+      kaartApi.current?.markeerStraat(slug);
     }
   }, []);
 

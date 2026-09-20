@@ -72,6 +72,26 @@ export const BASISKAARTEN: { id: string; naam: string; jaar: string }[] = [
   { id: "kad1832", naam: "Kadastrale kaart", jaar: "1832" },
 ];
 
+// Kaartpositie in de URL-hash (#zoom/lat/lng). Zo herstelt de browser-"terug"
+// de vorige kaartpositie en zijn kaartlinks deelbaar/bladwijzerbaar.
+function leesHashPositie(): { center: [number, number]; zoom: number } | null {
+  const m = /^#(\d+(?:\.\d+)?)\/(-?\d+(?:\.\d+)?)\/(-?\d+(?:\.\d+)?)$/.exec(
+    window.location.hash
+  );
+  if (!m) return null;
+  const zoom = Number(m[1]);
+  const lat = Number(m[2]);
+  const lng = Number(m[3]);
+  if (![zoom, lat, lng].every(Number.isFinite)) return null;
+  return { center: [lat, lng], zoom };
+}
+
+function schrijfHashPositie(kaart: LeafletMap): void {
+  const c = kaart.getCenter();
+  const z = Math.round(kaart.getZoom() * 100) / 100;
+  history.replaceState(null, "", `#${z}/${c.lat.toFixed(5)}/${c.lng.toFixed(5)}`);
+}
+
 /** Imperatieve handle waarmee bijv. het zoekveld naar een straat kan inzoomen. */
 export type KaartHandle = {
   zoomNaarStraat: (slug: string, centroid?: [number, number]) => void;
@@ -81,6 +101,8 @@ export type KaartHandle = {
   zetBasiskaart: (id: string) => Promise<void>;
   /** Vraag de live locatie op, toon een stip en zoom er (blijvend) naartoe. */
   startLiveLocatie: () => void;
+  /** Markeer een straatlijn (highlight) zónder de viewport te verplaatsen. */
+  markeerStraat: (slug: string) => void;
 };
 
 type Props = {
@@ -220,6 +242,20 @@ export default function Kaart({
         }
         kaart.locate(LOCATIE_OPTIES);
       },
+      markeerStraat(slug) {
+        // Alleen highlighten; de exacte viewport komt uit de URL-hash.
+        const laag = laagPerSlug.current[slug];
+        if (gemarkeerd.current && gemarkeerd.current !== laag) {
+          gemarkeerd.current.setStyle({ weight: 5, opacity: 0.75 });
+          gemarkeerd.current = null;
+        }
+        if (laag) {
+          laag.setStyle({ weight: 9, opacity: 1 });
+          laag.bringToFront();
+          laag.openTooltip();
+          gemarkeerd.current = laag;
+        }
+      },
     }),
     []
   );
@@ -232,9 +268,12 @@ export default function Kaart({
       const L = (await import("leaflet")).default;
       if (gestopt || !containerRef.current || kaartRef.current) return;
 
+      // Beginpositie uit de URL-hash (#zoom/lat/lng) indien aanwezig — zo
+      // herstelt browser-"terug" de vorige kaartpositie — anders het centrum.
+      const startPositie = leesHashPositie();
       const kaart = L.map(containerRef.current, {
-        center: GOUDA_CENTRUM,
-        zoom: START_ZOOM,
+        center: startPositie?.center ?? GOUDA_CENTRUM,
+        zoom: startPositie?.zoom ?? START_ZOOM,
         minZoom: 11,
         maxZoom: 19,
         zoomControl: false,
@@ -243,6 +282,8 @@ export default function Kaart({
         renderer: L.canvas({ tolerance: 12 }),
       });
       kaartRef.current = kaart;
+      // Kaartpositie in de URL bijhouden zodat terug-navigatie hem herstelt.
+      kaart.on("moveend", () => schrijfHashPositie(kaart));
       // Zoomknoppen verticaal gecentreerd op de linkerrand (via CSS in
       // StartScherm.module.css), zodat ze niet achter de vaste onderbalk vallen.
       L.control.zoom({ position: "topleft" }).addTo(kaart);
