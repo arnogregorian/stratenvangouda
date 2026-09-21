@@ -1,35 +1,46 @@
+/* Zelfde maatvoering als de onderbalk op de homepage (StartScherm .balk/.tab),
+   zodat de nav op detailpagina's exact gelijk oogt. z-index 1000 tilt hem boven
+   de Leaflet-attributie van het kaartje (Leaflet-bedieningen staan op 1000). */
 .footer {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  height: calc(var(--footer-hoogte) + env(safe-area-inset-bottom));
-  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 1000;
   display: flex;
-  justify-content: space-around;
   align-items: stretch;
+  gap: 0.25rem;
+  height: calc(var(--footer-hoogte) + env(safe-area-inset-bottom));
+  padding: 0.4rem 0.5rem;
+  padding-bottom: calc(0.4rem + env(safe-area-inset-bottom));
   background: var(--kleur-wit);
   border-top: 1px solid var(--kleur-lijn);
-  z-index: 900;
 }
 
 .item {
+  flex: 1 1 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.15rem;
-  flex: 1;
-  min-height: 44px;
+  min-height: 3.1rem;
+  padding: 0.35rem 0.25rem;
   font-size: 0.72rem;
   font-weight: 600;
   color: var(--kleur-ink-zacht);
   text-decoration: none;
   background: none;
   border: none;
+  border-radius: 12px;
   cursor: pointer;
+}
+
+.item svg {
+  display: block;
 }
 
 .item:hover {
   color: var(--kleur-primair);
+  background: var(--kleur-accent);
 }
