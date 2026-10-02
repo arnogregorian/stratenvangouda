@@ -114,14 +114,15 @@ function leesVorigeValidators(pad) {
   try {
     const oud = new DatabaseSync(pad, { readOnly: true });
     // Schemacontrole: mist de bestaande cache.db een sinds de vorige sync
-    // toegevoegde kolom (nu `sinds`), dan negeren we de validators. Zo houdt een
-    // 304 ("bron ongewijzigd") geen verouderd schema in stand, maar volgt er een
-    // volledige herbouw die de nieuwe kolom vult. Dit forceert óók de eenmalige
-    // cache-verversing voor v1.8: de duiding verhuisde naar `genoemd_naar` en
-    // `sinds` is nieuw, terwijl de Last-Modified van de bron ongewijzigd bleef.
+    // toegevoegde kolom (nu `problematisch`), dan negeren we de validators. Zo
+    // houdt een 304 ("bron ongewijzigd") geen verouderd schema in stand, maar
+    // volgt er een volledige herbouw die de nieuwe kolom vult. Dit forceerde
+    // eerder de eenmalige verversing voor v1.8 (`sinds`) en nu die voor v1.10.0:
+    // de problematische duiding is weer een losse `problematisch`-kolom, terwijl
+    // de Last-Modified van de bron ongewijzigd kan zijn gebleven.
     // Belangrijk in CI, waar cache.db van de vorige run teruggehaald wordt.
     const kolommen = oud.prepare("PRAGMA table_info(straten)").all();
-    if (!kolommen.some((k) => k.name === "sinds")) {
+    if (!kolommen.some((k) => k.name === "problematisch")) {
       oud.close();
       return null;
     }
@@ -209,13 +210,16 @@ async function volledigeSync(respons) {
       type,
       altNamen: normaliseerAltNamen(naam_alt, detail?.alt_names),
       genoemdNaar: detail?.genoemd_naar ?? null,
+      // Duiding bij een gevoelige/problematische straatnaam. Sinds API v1.10.0
+      // weer een losse property (daarvoor was de tekst tijdelijk aan
+      // `genoemd_naar` geplakt en als `problematisch` deprecated gemarkeerd).
+      // Slechts ~42 straten hebben een waarde; de rest blijft null.
+      problematisch: detail?.problematisch ?? null,
       ligging: detail?.ligging ?? null,
       vermeldingen: detail?.vermeldingen ?? null,
       // Jaartal "straat bestaat sinds" (API-veld sinds v1.8); lang niet elke
-      // straat heeft er een. De vroegere `problematisch`-duiding is deprecated
-      // en wordt door de API nu aan `genoemd_naar` geplakt (na een newline).
-      // Als schoon jaartal-string opslaan, zodat node:sqlite er geen REAL
-      // ("1954.0") van maakt in de TEXT-kolom.
+      // straat heeft er een. Als schoon jaartal-string opslaan, zodat
+      // node:sqlite er geen REAL ("1954.0") van maakt in de TEXT-kolom.
       sinds:
         detail?.sinds != null && Number.isFinite(Number(detail.sinds))
           ? String(Math.trunc(Number(detail.sinds)))
@@ -296,6 +300,7 @@ async function volledigeSync(respons) {
       type TEXT NOT NULL,
       alt_namen TEXT NOT NULL,
       genoemd_naar TEXT,
+      problematisch TEXT,
       ligging TEXT,
       vermeldingen TEXT,
       sinds TEXT,
@@ -319,7 +324,7 @@ async function volledigeSync(respons) {
     CREATE TABLE meta (sleutel TEXT PRIMARY KEY, waarde TEXT);
   `);
   const voegStraatToe = db.prepare(
-    "INSERT INTO straten VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO straten VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
   );
   const voegAfbeeldingToe = db.prepare(
     "INSERT INTO afbeeldingen VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -328,7 +333,7 @@ async function volledigeSync(respons) {
   for (const s of straten) {
     voegStraatToe.run(
       s.identifier, s.slug, s.naam, s.type, JSON.stringify(s.altNamen),
-      s.genoemdNaar, s.ligging, s.vermeldingen, s.sinds,
+      s.genoemdNaar, s.problematisch, s.ligging, s.vermeldingen, s.sinds,
       s.geometry ? JSON.stringify(s.geometry) : null
     );
     s.afbeeldingen.forEach((a, i) => {

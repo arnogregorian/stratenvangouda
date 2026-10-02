@@ -8,6 +8,7 @@ export type Straat = {
   type: string;
   altNamen: string[];
   genoemdNaar: string | null;
+  problematisch: string | null;
   ligging: string | null;
   vermeldingen: string | null;
   sinds: string | null;
@@ -46,6 +47,7 @@ function naarStraat(rij: any): Straat {
     type: rij.type,
     altNamen: JSON.parse(rij.alt_namen ?? "[]"),
     genoemdNaar: rij.genoemd_naar,
+    problematisch: rij.problematisch,
     ligging: rij.ligging,
     vermeldingen: rij.vermeldingen,
     // De bron levert een jaartal; node:sqlite kan het als REAL opslaan ("1954.0").

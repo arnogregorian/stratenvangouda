@@ -42,3 +42,17 @@
 .blok {
   margin-top: 1.75rem;
 }
+
+/* Aparte, duidelijk afgebakende rubriek voor de gevoelige duiding bij een
+   problematische straatnaam (API v1.10.0). Komt ná de "genoemd naar"-tekst. */
+.problematisch {
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--kleur-lijn);
+}
+
+.problematischKop {
+  font-size: 1.1rem;
+  color: var(--kleur-primair);
+  margin: 0 0 0.5rem;
+}

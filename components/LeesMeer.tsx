@@ -8,8 +8,8 @@ const GRENS = 420;
 /**
  * Lange teksten worden afgekapt met een "lees meer"-toggle (RFP §4.3).
  * Dubbele newlines worden alinea's, enkele newlines een regelafbreking (bijv.
- * de duiding bij problematische namen die de API sinds v1.8 aan `genoemd_naar`
- * plakt). Geen tabellen.
+ * de aparte duiding bij problematische straatnamen, API-veld `problematisch`
+ * sinds v1.10.0). Geen tabellen.
  */
 export default function LeesMeer({ tekst }: { tekst: string }) {
   const [open, setOpen] = useState(false);
