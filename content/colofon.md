@@ -1,7 +1,5 @@
 # Colofon
 
-*Concepttekst — definitieve tekst wordt aangeleverd door Die Goude.*
-
 StratenVanGouda.nl is een initiatief van de **Historische Vereniging Die Goude**, in samenwerking met het **Streekarchief Midden-Holland**. Alle informatie en al het beeldmateriaal op deze website komen uit de **Gouda Tijdmachine**, het gezamenlijke project voor de digitale ontsluiting van het Goudse erfgoed.
 
 Deze website is mede mogelijk gemaakt met subsidie van de **gemeente Gouda**.
