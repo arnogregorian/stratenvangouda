@@ -100,7 +100,10 @@ export default function Zoekveld({ onLocate }: Props) {
                   gaNaar(item);
                 }}
               >
-                <span className={stijl.naam}>{item.n}</span>
+                <span className={stijl.naam}>
+                  {item.n}
+                  {item.v && <span className={stijl.tag}>{t.verdwenen}</span>}
+                </span>
                 {item.a && <span className={stijl.alt}>{item.a}</span>}
               </button>
               {onLocate && (

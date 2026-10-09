@@ -138,7 +138,10 @@ export default function GpsKnop({
                 {resultaten.map(({ item, afstand }) => (
                   <li key={item.s}>
                     <a href={`/straat/${item.s}/`} className={stijl.link}>
-                      <span>{item.n}</span>
+                      <span>
+                        {item.n}
+                        {item.v && <span className={stijl.tag}>{t.verdwenen}</span>}
+                      </span>
                       <span className={stijl.afstand}>{toonAfstand(afstand)}</span>
                     </a>
                   </li>

@@ -127,6 +127,9 @@ export default async function StraatPagina({ params }: Props) {
         <header className={stijl.kop}>
           <div className={stijl.titelRij}>
             <h1 className={stijl.titel}>{straat.naam}</h1>
+            {straat.type === "verdwenen" && (
+              <span className={stijl.verdwenenTag}>Verdwenen</span>
+            )}
             {straat.sinds && (
               <span className={stijl.sinds}>Sinds {straat.sinds}</span>
             )}

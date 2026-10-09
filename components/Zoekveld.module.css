@@ -89,6 +89,21 @@
   font-weight: 600;
 }
 
+/* Gedempte pill naast de naam: markeert een verdwenen straat. Bewust neutraal
+   grijs, zodat hij niet concurreert met de rode "Sinds"-badge op de detailpagina. */
+.tag {
+  display: inline-block;
+  margin-left: 0.45rem;
+  padding: 0.05rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--kleur-ink-zacht);
+  background: var(--kleur-lijn);
+  border-radius: 999px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
 .alt {
   font-size: 0.8rem;
   color: var(--kleur-ink-zacht);

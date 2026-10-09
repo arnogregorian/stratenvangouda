@@ -28,6 +28,19 @@
   white-space: nowrap;
 }
 
+/* Gedempte grijze pill: markeert een verdwenen straat. Bewust neutraal, zodat
+   hij naast de rode "Sinds"-badge niet om aandacht concurreert. */
+.verdwenenTag {
+  display: inline-block;
+  padding: 0.15rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--kleur-ink-zacht);
+  background: var(--kleur-lijn);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
 .ligging {
   margin: 0;
   color: var(--kleur-ink-zacht);

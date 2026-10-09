@@ -64,6 +64,7 @@ const verdwenen = db
   .all()
   .map((rij) => ({
     ...rij,
+    altNamen: JSON.parse(rij.alt_namen ?? "[]"),
     geometry: rij.geometry ? JSON.parse(rij.geometry) : null,
   }));
 
@@ -81,16 +82,26 @@ writeFileSync(
   })
 );
 
+// Zoek/GPS-index: huidige straten eerst (houden zo voorrang in de suggesties),
+// daarna de verdwenen straten met een vlag `v: 1` zodat de UI er een tag bij
+// kan tonen. De vlag wordt bij huidige straten weggelaten (scheelt bytes).
 writeFileSync(
   join(PUBLIC_DATA, "index.json"),
-  JSON.stringify(
-    huidig.map((s) => ({
+  JSON.stringify([
+    ...huidig.map((s) => ({
       n: s.naam,
       a: s.altNamen.join(", ") || undefined,
       s: s.slug,
       c: centroid(s.geometry) ?? undefined,
-    }))
-  )
+    })),
+    ...verdwenen.map((s) => ({
+      n: s.naam,
+      a: s.altNamen.join(", ") || undefined,
+      s: s.slug,
+      c: centroid(s.geometry) ?? undefined,
+      v: 1,
+    })),
+  ])
 );
 
 const fotosMap = join(PUBLIC_DATA, "fotos");

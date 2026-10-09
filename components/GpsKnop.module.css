@@ -98,3 +98,17 @@
   font-size: 0.9rem;
   white-space: nowrap;
 }
+
+/* Gedempte pill: markeert een verdwenen straat in de buurtlijst. */
+.tag {
+  display: inline-block;
+  margin-left: 0.45rem;
+  padding: 0.05rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--kleur-ink-zacht);
+  background: var(--kleur-lijn);
+  border-radius: 999px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
