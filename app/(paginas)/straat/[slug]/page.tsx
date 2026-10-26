@@ -6,6 +6,7 @@ import {
   fotoId,
   straatViaSlug,
   SITE_URL,
+  OG_STANDAARD,
   type Afbeelding,
 } from "@/lib/straten";
 import AltNamen from "@/components/AltNamen";
@@ -37,7 +38,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const straat = straatViaSlug(slug);
   if (!straat) return {};
   // Deelafbeelding (OpenGraph, bijv. LinkedIn): de meest recente foto van deze
-  // straat — herkenbaarder dan een generieke afbeelding.
+  // straat — herkenbaarder dan een generieke afbeelding. Heeft de straat geen
+  // foto (bijv. de Columbuslaan), dan de vaste Die Goude-afbeelding tonen i.p.v.
+  // een lege preview bij delen via WhatsApp/Facebook.
   const recentste = afbeeldingenVoorStraat(straat.identifier).reduce<Afbeelding | null>(
     (beste, f) =>
       !beste ||
@@ -46,7 +49,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         : beste,
     null
   );
-  const ogAfbeelding = recentste?.image ?? recentste?.thumbnail ?? null;
+  const ogAfbeelding = recentste?.image ?? recentste?.thumbnail ?? OG_STANDAARD;
   return {
     title: straat.naam,
     description: samenvatting(straat.genoemdNaar),
@@ -57,11 +60,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: `/straat/${slug}/`,
       type: "article",
       locale: "nl_NL",
-      images: ogAfbeelding ? [ogAfbeelding] : undefined,
+      images: [ogAfbeelding],
     },
-    twitter: ogAfbeelding
-      ? { card: "summary_large_image", images: [ogAfbeelding] }
-      : undefined,
+    twitter: { card: "summary_large_image", images: [ogAfbeelding] },
   };
 }
 
@@ -135,6 +136,14 @@ export default async function StraatPagina({ params }: Props) {
             )}
           </div>
           {straat.ligging && <p className={stijl.ligging}>{straat.ligging}</p>}
+          {straat.buurten.length > 0 && (
+            <p className={stijl.buurt}>
+              <span className={stijl.buurtLabel}>
+                {straat.buurten.length > 1 ? "Buurten" : "Buurt"}
+              </span>{" "}
+              {straat.buurten.join(", ")}
+            </p>
+          )}
         </header>
 
         {straat.genoemdNaar ? (

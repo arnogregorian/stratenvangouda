@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
-import { SITE_URL } from "@/lib/straten";
+import { SITE_URL, OG_STANDAARD } from "@/lib/straten";
 import Matomo from "@/components/Matomo";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 
@@ -14,6 +14,20 @@ export const metadata: Metadata = {
   },
   description:
     "Ontdek waar Goudse straatnamen vandaan komen: herkomst, betekenis en historisch beeldmateriaal, verzorgd door Historische Vereniging Die Goude en het Streekarchief Midden-Holland.",
+  // Standaard-deelafbeelding voor alle pagina's zonder eigen openGraph-blok
+  // (startpagina, hulp, colofon). Straatpagina's zetten een eigen blok en
+  // vallen terug op dezelfde afbeelding als een straat geen foto heeft.
+  openGraph: {
+    type: "website",
+    locale: "nl_NL",
+    siteName: "Straten van Gouda",
+    url: "/",
+    images: [{ url: OG_STANDAARD, width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: [OG_STANDAARD],
+  },
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [

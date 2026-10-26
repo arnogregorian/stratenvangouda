@@ -12,6 +12,7 @@ export type Straat = {
   ligging: string | null;
   vermeldingen: string | null;
   sinds: string | null;
+  buurten: string[];
   geometry: GeoJSON.Geometry | null;
 };
 
@@ -56,6 +57,7 @@ function naarStraat(rij: any): Straat {
       rij.sinds != null && Number.isFinite(Number(rij.sinds))
         ? String(Math.trunc(Number(rij.sinds)))
         : rij.sinds ?? null,
+    buurten: JSON.parse(rij.buurten ?? "[]"),
     geometry: rij.geometry ? JSON.parse(rij.geometry) : null,
   };
 }
@@ -118,3 +120,8 @@ export function fotoId(afbeelding: Afbeelding, index: number): string {
 }
 
 export const SITE_URL = process.env.SITE_URL ?? "https://stratenvangouda.nl";
+
+// Vaste deelafbeelding (Open Graph / social share) voor pagina's zonder eigen
+// foto: de startpagina en straten zonder beeldmateriaal. Zie
+// scripts/maak-og-afbeelding.mjs. Pad wordt door metadataBase absoluut gemaakt.
+export const OG_STANDAARD = "/og-standaard.png";

@@ -65,9 +65,9 @@ The live Gouda Tijdmachine API (`https://api-straatnamen.goudatijdmachine.nl`, r
 - Since API v1.5.0 all endpoints send `Last-Modified`/`ETag` (on `/straatnamen` they cover the whole collection including linked images) and honour conditional requests with 304. Sync stores the validators in cache.db's `meta` table (`bron_etag`, `bron_last_modified`) and short-circuits on 304; with `--alleen-bij-wijziging` it then exits 3 so a cron chain can skip the rebuild.
 - Never call `process.exit()` in `sync.mjs` — it crashes on Windows (libuv assert) while network handles are still open. Set `process.exitCode` and let the process end naturally.
 
-## Not yet available from the API
+## RFP fields now served by the API
 
-`wijk` (neighbourhood) and an explicit year/age field are requested in the RFP but not yet in the API. The detail page (`app/(paginas)/straat/[slug]/page.tsx`) has placeholder comments marking where they'll go once the API provides them.
+The RFP `wijk` (neighbourhood) is delivered by the detail endpoint as **`buurten`** — a string array (a street can belong to several buurten; disappeared streets have none). It's synced into the `buurten` column of `cache.db` (JSON), exposed via `Straat.buurten`, and shown as a labelled line ("Buurt"/"Buurten") under the header on the street page. The year/age field is covered by `sinds` (API v1.8, shown as the "Sinds {jaar}" badge). No explicit `wijk` field exists — use `buurten`.
 
 ## Environment variables (all optional)
 

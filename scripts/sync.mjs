@@ -114,15 +114,15 @@ function leesVorigeValidators(pad) {
   try {
     const oud = new DatabaseSync(pad, { readOnly: true });
     // Schemacontrole: mist de bestaande cache.db een sinds de vorige sync
-    // toegevoegde kolom (nu `problematisch`), dan negeren we de validators. Zo
+    // toegevoegde kolom (nu `buurten`), dan negeren we de validators. Zo
     // houdt een 304 ("bron ongewijzigd") geen verouderd schema in stand, maar
     // volgt er een volledige herbouw die de nieuwe kolom vult. Dit forceerde
-    // eerder de eenmalige verversing voor v1.8 (`sinds`) en nu die voor v1.10.0:
-    // de problematische duiding is weer een losse `problematisch`-kolom, terwijl
-    // de Last-Modified van de bron ongewijzigd kan zijn gebleven.
+    // eerder de eenmalige verversing voor v1.8 (`sinds`) en v1.10.0
+    // (`problematisch`), en nu die voor de buurt/wijk-weergave (`buurten`,
+    // detailveld), terwijl de Last-Modified van de bron ongewijzigd kan zijn.
     // Belangrijk in CI, waar cache.db van de vorige run teruggehaald wordt.
     const kolommen = oud.prepare("PRAGMA table_info(straten)").all();
-    if (!kolommen.some((k) => k.name === "problematisch")) {
+    if (!kolommen.some((k) => k.name === "buurten")) {
       oud.close();
       return null;
     }
@@ -216,6 +216,11 @@ async function volledigeSync(respons) {
       // Slechts ~42 straten hebben een waarde; de rest blijft null.
       problematisch: detail?.problematisch ?? null,
       ligging: detail?.ligging ?? null,
+      // Buurt(en) waarin de straat ligt (RFP §4.3 "wijk"; de API levert dit als
+      // detailveld `buurten`, een array — lang niet elke straat heeft een waarde).
+      buurten: Array.isArray(detail?.buurten)
+        ? detail.buurten.filter((b) => typeof b === "string" && b.trim())
+        : [],
       vermeldingen: detail?.vermeldingen ?? null,
       // Jaartal "straat bestaat sinds" (API-veld sinds v1.8); lang niet elke
       // straat heeft er een. Als schoon jaartal-string opslaan, zodat
@@ -304,6 +309,7 @@ async function volledigeSync(respons) {
       ligging TEXT,
       vermeldingen TEXT,
       sinds TEXT,
+      buurten TEXT,
       geometry TEXT
     );
     CREATE TABLE afbeeldingen (
@@ -324,7 +330,7 @@ async function volledigeSync(respons) {
     CREATE TABLE meta (sleutel TEXT PRIMARY KEY, waarde TEXT);
   `);
   const voegStraatToe = db.prepare(
-    "INSERT INTO straten VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO straten VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
   );
   const voegAfbeeldingToe = db.prepare(
     "INSERT INTO afbeeldingen VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -334,6 +340,7 @@ async function volledigeSync(respons) {
     voegStraatToe.run(
       s.identifier, s.slug, s.naam, s.type, JSON.stringify(s.altNamen),
       s.genoemdNaar, s.problematisch, s.ligging, s.vermeldingen, s.sinds,
+      JSON.stringify(s.buurten ?? []),
       s.geometry ? JSON.stringify(s.geometry) : null
     );
     s.afbeeldingen.forEach((a, i) => {

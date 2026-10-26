@@ -47,6 +47,17 @@
   font-size: 0.95rem;
 }
 
+/* Buurt/wijk waarin de straat ligt (RFP §4.3). Compacte metaregel onder de kop. */
+.buurt {
+  margin: 0.35rem 0 0;
+  color: var(--kleur-ink-zacht);
+  font-size: 0.95rem;
+}
+
+.buurtLabel {
+  font-weight: 600;
+}
+
 .geenTekst {
   color: var(--kleur-ink-zacht);
   font-style: italic;
