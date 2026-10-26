@@ -108,7 +108,7 @@ const TEKSTEN: Record<Taal, Teksten> = {
     offlineOpslaan: "Alles offline opslaan",
     offlineTitel: "Offline beschikbaar maken",
     offlineUitleg:
-      "Sla alle straatpagina's, kaartgegevens en miniaturen op dit apparaat op, zodat de app ook zonder internet werkt. Dit kan enkele honderden MB zijn.",
+      "Sla alle straatpagina's en kaartgegevens op dit apparaat op, zodat de app ook zonder internet werkt. De foto's blijven online en worden niet mee opgeslagen.",
     offlineStart: "Downloaden",
     offlineBezig: (pct) => `Opslaan… ${pct}%`,
     offlineKlaar: "Klaar! De app werkt nu offline.",
@@ -148,7 +148,7 @@ const TEKSTEN: Record<Taal, Teksten> = {
     offlineOpslaan: "Save everything offline",
     offlineTitel: "Make available offline",
     offlineUitleg:
-      "Save all street pages, map data and thumbnails on this device so the app works without internet. This can be a few hundred MB.",
+      "Save all street pages and map data on this device so the app works without internet. Photos stay online and are not stored.",
     offlineStart: "Download",
     offlineBezig: (pct) => `Saving… ${pct}%`,
     offlineKlaar: "Done! The app now works offline.",
@@ -190,7 +190,7 @@ const TEKSTEN: Record<Taal, Teksten> = {
     offlineOpslaan: "Alles offline speichern",
     offlineTitel: "Offline verfügbar machen",
     offlineUitleg:
-      "Speichern Sie alle Straßenseiten, Kartendaten und Miniaturansichten auf diesem Gerät, damit die App auch ohne Internet funktioniert. Das können einige hundert MB sein.",
+      "Speichern Sie alle Straßenseiten und Kartendaten auf diesem Gerät, damit die App auch ohne Internet funktioniert. Die Fotos bleiben online und werden nicht gespeichert.",
     offlineStart: "Herunterladen",
     offlineBezig: (pct) => `Speichern… ${pct}%`,
     offlineKlaar: "Fertig! Die App funktioniert jetzt offline.",
@@ -232,7 +232,7 @@ const TEKSTEN: Record<Taal, Teksten> = {
     offlineOpslaan: "Tout enregistrer hors ligne",
     offlineTitel: "Rendre disponible hors ligne",
     offlineUitleg:
-      "Enregistrez toutes les pages de rues, les données cartographiques et les miniatures sur cet appareil pour que l'application fonctionne sans connexion. Cela peut représenter quelques centaines de Mo.",
+      "Enregistrez toutes les pages de rues et les données cartographiques sur cet appareil pour que l'application fonctionne sans connexion. Les photos restent en ligne et ne sont pas enregistrées.",
     offlineStart: "Télécharger",
     offlineBezig: (pct) => `Enregistrement… ${pct}%`,
     offlineKlaar: "Terminé ! L'application fonctionne désormais hors ligne.",

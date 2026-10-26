@@ -97,6 +97,8 @@ export default async function StraatPagina({ params }: Props) {
     datering: foto.datering,
     rechten: foto.auteursrechten,
     bron: foto.bronorganisatie,
+    beeldbank: foto.bronUrl,
+    inventarisnummer: foto.inventarisnummer,
   }));
   const punt = centroid(straat.geometry);
 

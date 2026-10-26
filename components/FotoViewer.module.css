@@ -83,3 +83,17 @@
   font-size: 0.78rem;
   color: #b9b7b2;
 }
+
+/* Link naar de beeldbankpagina van het Streekarchief. Lichte accentkleur op de
+   donkere footer; ruime tikzone (WCAG 2.2 doelgrootte). */
+.beeldbankLink {
+  display: inline-block;
+  padding: 0.25rem 0;
+  font-size: 0.82rem;
+  color: #ffb3ad;
+  text-decoration: underline;
+}
+
+.beeldbankLink:hover {
+  color: #ffd0cc;
+}

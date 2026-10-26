@@ -27,6 +27,7 @@ export type Afbeelding = {
   auteursrechten: string | null;
   bronUrl: string | null;
   bronorganisatie: string | null;
+  inventarisnummer: string | null;
 };
 
 let db: DatabaseSync | null = null;
@@ -103,6 +104,7 @@ export function afbeeldingenVoorStraat(identifier: string): Afbeelding[] {
       auteursrechten: rij.auteursrechten,
       bronUrl: rij.bron_url,
       bronorganisatie: rij.bronorganisatie,
+      inventarisnummer: rij.inventarisnummer,
     }));
 }
 

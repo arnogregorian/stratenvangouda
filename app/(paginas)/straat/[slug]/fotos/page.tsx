@@ -47,6 +47,8 @@ export default async function FotosPagina({ params }: Props) {
         datering: alleFotos[0].datering,
         rechten: alleFotos[0].auteursrechten,
         bron: alleFotos[0].bronorganisatie,
+        beeldbank: alleFotos[0].bronUrl,
+        inventarisnummer: alleFotos[0].inventarisnummer,
       }
     : null;
 

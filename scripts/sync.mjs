@@ -114,15 +114,20 @@ function leesVorigeValidators(pad) {
   try {
     const oud = new DatabaseSync(pad, { readOnly: true });
     // Schemacontrole: mist de bestaande cache.db een sinds de vorige sync
-    // toegevoegde kolom (nu `buurten`), dan negeren we de validators. Zo
-    // houdt een 304 ("bron ongewijzigd") geen verouderd schema in stand, maar
-    // volgt er een volledige herbouw die de nieuwe kolom vult. Dit forceerde
-    // eerder de eenmalige verversing voor v1.8 (`sinds`) en v1.10.0
-    // (`problematisch`), en nu die voor de buurt/wijk-weergave (`buurten`,
-    // detailveld), terwijl de Last-Modified van de bron ongewijzigd kan zijn.
-    // Belangrijk in CI, waar cache.db van de vorige run teruggehaald wordt.
-    const kolommen = oud.prepare("PRAGMA table_info(straten)").all();
-    if (!kolommen.some((k) => k.name === "buurten")) {
+    // toegevoegde kolom, dan negeren we de validators. Zo houdt een 304 ("bron
+    // ongewijzigd") geen verouderd schema in stand, maar volgt er een volledige
+    // herbouw die de nieuwe kolom vult. Dit forceerde eerder de eenmalige
+    // verversing voor v1.8 (`sinds`), v1.10.0 (`problematisch`), de buurt/wijk-
+    // weergave (`straten.buurten`) en nu de beeldbankverwijzing
+    // (`afbeeldingen.inventarisnummer`), terwijl de Last-Modified van de bron
+    // ongewijzigd kan zijn. Belangrijk in CI, waar cache.db van de vorige run
+    // teruggehaald wordt.
+    const stratenKolommen = oud.prepare("PRAGMA table_info(straten)").all();
+    const afbKolommen = oud.prepare("PRAGMA table_info(afbeeldingen)").all();
+    if (
+      !stratenKolommen.some((k) => k.name === "buurten") ||
+      !afbKolommen.some((k) => k.name === "inventarisnummer")
+    ) {
       oud.close();
       return null;
     }
@@ -325,6 +330,7 @@ async function volledigeSync(respons) {
       auteursrechten TEXT,
       bron_url TEXT,
       bronorganisatie TEXT,
+      inventarisnummer TEXT,
       PRIMARY KEY (straat_identifier, volgorde)
     );
     CREATE TABLE meta (sleutel TEXT PRIMARY KEY, waarde TEXT);
@@ -333,7 +339,7 @@ async function volledigeSync(respons) {
     "INSERT INTO straten VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
   );
   const voegAfbeeldingToe = db.prepare(
-    "INSERT INTO afbeeldingen VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO afbeeldingen VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
   );
   db.exec("BEGIN");
   for (const s of straten) {
@@ -349,7 +355,10 @@ async function volledigeSync(respons) {
         a.image ?? null, a.iiif_info_json ?? null, a.vervaardiger ?? null,
         a.datering ?? null, a.informatie_auteursrechten ?? null, a.url ?? null,
         // Veldnaam bevat een typefout in de API ("bronbronorganisatie"); beide accepteren
-        a.bronbronorganisatie ?? a.bronorganisatie ?? null
+        a.bronbronorganisatie ?? a.bronorganisatie ?? null,
+        // Inventarisnummer bij het Streekarchief; samen met bron_url de
+        // verwijzing naar de beeldbankpagina (RFP-wens Streekarchief).
+        a.inventarisnummer ?? null
       );
     });
   }

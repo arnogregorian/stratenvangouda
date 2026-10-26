@@ -124,21 +124,22 @@ for (const straat of alleStr) {
     datering: a.datering,
     rechten: a.auteursrechten,
     bron: a.bronorganisatie,
+    // Verwijzing naar de beeldbank van het Streekarchief (RFP-wens): de
+    // detailpagina-URL en het inventarisnummer, zodat bezoekers de foto
+    // zelf kunnen terugvinden.
+    beeldbank: a.bron_url,
+    inventarisnummer: a.inventarisnummer,
   }));
   if (!fotos.length) continue;
   writeFileSync(join(fotosMap, `${straat.slug}.json`), JSON.stringify(fotos));
   fotosSlugs.push(straat.slug);
 }
 
-// Offline-manifest voor de PWA-download: pagina's + databestanden (eigen origin)
-// en miniatuur-URL's (extern). Wordt alleen opgehaald als de bezoeker in de
-// geïnstalleerde app kiest om alles offline op te slaan.
-const thumbnails = db
-  .prepare(
-    "SELECT DISTINCT thumbnail FROM afbeeldingen WHERE thumbnail IS NOT NULL AND thumbnail != ''"
-  )
-  .all()
-  .map((r) => r.thumbnail);
+// Offline-manifest voor de PWA-download: alleen pagina's + databestanden van de
+// eigen origin. De miniaturen blijven bewust buiten de offline-opslag — ze komen
+// extern van de beeldbank en worden online geladen; zo blijft de download licht
+// (anders ruim 7.700 externe afbeeldingen, honderden MB). Wordt alleen opgehaald
+// als de bezoeker in de geïnstalleerde app kiest om offline op te slaan.
 const lokaal = [
   "/",
   "/hulp/",
@@ -151,10 +152,10 @@ const lokaal = [
 ];
 writeFileSync(
   join(PUBLIC_DATA, "offline-manifest.json"),
-  JSON.stringify({ local: lokaal, thumbnails })
+  JSON.stringify({ local: lokaal })
 );
 
 console.log(
   `Export klaar: ${huidig.length} huidige + ${verdwenen.length} verdwenen straten, ` +
-    `fotobestanden voor ${fotosSlugs.length} straten, ${thumbnails.length} miniaturen → public/data/`
+    `fotobestanden voor ${fotosSlugs.length} straten (miniaturen extern) → public/data/`
 );

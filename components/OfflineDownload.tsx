@@ -4,7 +4,9 @@ import { useState } from "react";
 import { useTaal } from "@/lib/taal";
 import stijl from "./OfflineDownload.module.css";
 
-type Manifest = { local: string[]; thumbnails: string[] };
+// Alleen eigen-origin bestanden; de miniaturen blijven extern en worden online
+// geladen (lichte download, zie scripts/exporteer.mjs).
+type Manifest = { local: string[] };
 type Status = "idle" | "bezig" | "klaar" | "fout";
 
 /** Verwerk een lijst met een vaste gelijktijdigheid; roep na elk item terug. */
@@ -49,14 +51,15 @@ export default function OfflineDownload({
         }
       );
       const cache = await caches.open("offline-straten");
-      const totaal = manifest.local.length + manifest.thumbnails.length;
+      const totaal = manifest.local.length;
       let gedaan = 0;
       const stap = () => {
         gedaan++;
         setPct(Math.round((gedaan / totaal) * 100));
       };
 
-      // Eigen origin (pagina's + data): normale fetch.
+      // Eigen origin (pagina's + data): normale fetch. De miniaturen worden
+      // bewust niet mee-opgeslagen — die laden extern van de beeldbank.
       await pool(
         manifest.local,
         8,
@@ -66,20 +69,6 @@ export default function OfflineDownload({
             if (res.ok) await cache.put(url, res);
           } catch {
             /* individueel bestand overslaan */
-          }
-        },
-        stap
-      );
-      // Externe miniaturen: no-cors → opaque respons, cachebaar voor <img>.
-      await pool(
-        manifest.thumbnails,
-        8,
-        async (url) => {
-          try {
-            const res = await fetch(url, { mode: "no-cors" });
-            await cache.put(url, res);
-          } catch {
-            /* individuele miniatuur overslaan */
           }
         },
         stap

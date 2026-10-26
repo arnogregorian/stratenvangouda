@@ -161,6 +161,23 @@ export default function FotoViewer({
         {foto.titel && <p className={stijl.bronTitel}>{foto.titel}</p>}
         {bron && <p className={stijl.bronRegel}>{bron}</p>}
         {foto.rechten && <p className={stijl.bronRegel}>{foto.rechten}</p>}
+        {foto.inventarisnummer && (
+          <p className={stijl.bronRegel}>
+            Inventarisnummer: {foto.inventarisnummer}
+          </p>
+        )}
+        {foto.beeldbank && (
+          <p className={stijl.bronRegel}>
+            <a
+              className={stijl.beeldbankLink}
+              href={foto.beeldbank}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Bekijk in de beeldbank
+            </a>
+          </p>
+        )}
       </footer>
     </div>
   );

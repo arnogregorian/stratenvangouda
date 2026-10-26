@@ -11,6 +11,8 @@ export type Foto = {
   datering: string | null;
   rechten: string | null;
   bron: string | null;
+  beeldbank: string | null;
+  inventarisnummer: string | null;
 };
 
 const cache = new Map<string, Promise<Foto[]>>();
