@@ -16,13 +16,14 @@
   margin: 0;
 }
 
-/* "Sinds {jaar}"-badge naast de straatnaam. */
+/* "Sinds {jaar}"-badge naast de straatnaam. Donkerrood i.p.v. primair rood voor
+   ruimere contrastmarge op de crème achtergrond (~6,6:1 i.p.v. ~4,6:1). */
 .sinds {
   display: inline-block;
   padding: 0.15rem 0.65rem;
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--kleur-primair);
+  color: var(--kleur-primair-donker);
   background: var(--kleur-accent);
   border-radius: 999px;
   white-space: nowrap;

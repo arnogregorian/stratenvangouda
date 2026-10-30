@@ -358,5 +358,6 @@
 }
 
 .kaartKeuzeActief .kaartJaar {
-  color: rgba(255, 255, 255, 0.85);
+  /* Vol wit i.p.v. 85% transparant: ~5,3:1 op het rood (WCAG 1.4.3). */
+  color: var(--kleur-wit);
 }

@@ -111,6 +111,7 @@ export default function FotoViewer({
   return (
     <div className={stijl.scherm}>
       <header className={stijl.kop}>
+        <h1 className="alleen-screenreader">Beeldmateriaal van {straatNaam}</h1>
         <a href={`/straat/${slug}/`} className={stijl.terug}>
           ← {straatNaam}
         </a>

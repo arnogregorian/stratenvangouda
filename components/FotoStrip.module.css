@@ -15,7 +15,8 @@
 .sorteer select {
   font: inherit;
   font-size: 0.85rem;
-  padding: 0.35rem 0.55rem;
+  /* Ruimere padding → tikdoel comfortabel ≥ 24px hoog (WCAG 2.5.8). */
+  padding: 0.5rem 0.6rem;
   color: var(--kleur-ink);
   background: var(--kleur-wit);
   border: 1px solid var(--kleur-lijn);

@@ -14,6 +14,7 @@ import {
   zetVerdwenenVoorkeur,
 } from "@/lib/bezocht";
 import { useTaal } from "@/lib/taal";
+import { useModaal } from "@/lib/useModaal";
 import stijl from "./StartScherm.module.css";
 
 /**
@@ -36,6 +37,7 @@ export default function StartScherm() {
   const [isPWA, setIsPWA] = useState(false);
   const eersteRender = useRef(true);
   const kaartApi = useRef<KaartHandle>(null);
+  const kaartModalRef = useRef<HTMLDivElement>(null);
   // Straat waarop ingezoomd moet worden zodra de kaart klaar is (terugkeer
   // vanaf een straatpagina, zie lib/bezocht.ts).
   const wachtendeStraat = useRef<string | null>(null);
@@ -145,17 +147,19 @@ export default function StartScherm() {
     }
   }, []);
 
-  // Escape sluit de bovenliggende modal (kaartlaag) of anders de intro.
+  // Escape sluit de intro-dialog (bewust niet-modaal; de kaart erachter blijft
+  // bruikbaar). De kaartlaag-modal regelt zijn eigen Escape, focus-trap en
+  // focus-herstel via useModaal hieronder.
   useEffect(() => {
-    if (!introOpen && !kaartModal) return;
+    if (!introOpen) return;
     const bijToets = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      if (kaartModal) setKaartModal(false);
-      else sluitIntro();
+      if (e.key === "Escape") sluitIntro();
     };
     window.addEventListener("keydown", bijToets);
     return () => window.removeEventListener("keydown", bijToets);
-  }, [introOpen, kaartModal, sluitIntro]);
+  }, [introOpen, sluitIntro]);
+
+  useModaal(kaartModal, kaartModalRef, () => setKaartModal(false));
 
   // Zoekveld focussen bij héropenen — niet bij de eerste weergave, om geen
   // ongevraagd toetsenbord op mobiel te openen.
@@ -255,11 +259,14 @@ export default function StartScherm() {
           </svg>
           {t.startOpLocatie}
         </button>
-        {locatieMelding && (
-          <p className={stijl.locatieMelding} aria-live="polite">
-            {locatieMelding}
-          </p>
-        )}
+        {/* Persistente live-regio (bestaat vóór de melding); verborgen zolang er
+            geen melding is, zodat er geen lege ruimte in de intro ontstaat. */}
+        <p
+          className={locatieMelding ? stijl.locatieMelding : "alleen-screenreader"}
+          aria-live="polite"
+        >
+          {locatieMelding}
+        </p>
         <div className={stijl.ofScheiding}>
           <span>{t.ofScheiding}</span>
         </div>
@@ -374,10 +381,12 @@ export default function StartScherm() {
 
       {kaartModal && (
         <div
+          ref={kaartModalRef}
           className={stijl.modalLaag}
           role="dialog"
           aria-modal="true"
           aria-label={t.kaartlaagKiezen}
+          tabIndex={-1}
         >
           <button
             type="button"

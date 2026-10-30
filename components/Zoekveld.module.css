@@ -17,7 +17,13 @@
 
 .veld:focus {
   border-color: var(--kleur-primair);
-  outline: none;
+}
+
+/* Duidelijk zichtbare toetsenbordfocus (WCAG 2.4.7); naast de randkleurwissel
+   dezelfde outline-ring als de rest van de site. */
+.veld:focus-visible {
+  outline: 3px solid var(--kleur-primair);
+  outline-offset: 2px;
 }
 
 .lijst {

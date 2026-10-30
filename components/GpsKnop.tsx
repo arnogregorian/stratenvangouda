@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { afstandMeters, laadIndex, type IndexItem } from "@/lib/zoekindex";
 import { useTaal } from "@/lib/taal";
+import { useModaal } from "@/lib/useModaal";
 import stijl from "./GpsKnop.module.css";
 
 type Resultaat = { item: IndexItem; afstand: number };
@@ -32,6 +33,9 @@ export default function GpsKnop({
   const [bezig, setBezig] = useState(false);
   const [fout, setFout] = useState<string | null>(null);
   const [resultaten, setResultaten] = useState<Resultaat[]>([]);
+  const dialoogRef = useRef<HTMLDivElement>(null);
+  // Focus-in, focus-trap, Escape en focus-herstel voor de modale dialog.
+  useModaal(open, dialoogRef, () => setOpen(false));
 
   const zoekInBuurt = () => {
     setOpen(true);
@@ -108,9 +112,11 @@ export default function GpsKnop({
       {open &&
         createPortal(
         <div
+          ref={dialoogRef}
           role="dialog"
           aria-modal="true"
           aria-label={t.stratenInBuurt}
+          tabIndex={-1}
           className={stijl.laag}
         >
           <button
@@ -131,8 +137,12 @@ export default function GpsKnop({
                 ✕
               </button>
             </div>
-            {bezig && <p aria-live="polite">{t.locatieBepalen}</p>}
-            {fout && <p aria-live="polite">{fout}</p>}
+            {/* Persistente live-regio: bestaat vóór de melding, zodat screen-
+                readers de wijziging betrouwbaar aankondigen (WCAG 4.1.3). */}
+            <div aria-live="polite">
+              {bezig && <p>{t.locatieBepalen}</p>}
+              {fout && <p>{fout}</p>}
+            </div>
             {!bezig && !fout && (
               <ul className={stijl.lijst}>
                 {resultaten.map(({ item, afstand }) => (

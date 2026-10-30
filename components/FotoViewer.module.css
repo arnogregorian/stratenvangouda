@@ -88,7 +88,8 @@
    donkere footer; ruime tikzone (WCAG 2.2 doelgrootte). */
 .beeldbankLink {
   display: inline-block;
-  padding: 0.25rem 0;
+  /* Ruimere verticale padding → tikdoel ≥ 24px hoog (WCAG 2.5.8). */
+  padding: 0.4rem 0;
   font-size: 0.82rem;
   color: #ffb3ad;
   text-decoration: underline;

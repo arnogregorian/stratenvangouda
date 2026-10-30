@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTaal } from "@/lib/taal";
+import { useModaal } from "@/lib/useModaal";
 import stijl from "./OfflineDownload.module.css";
 
 // Alleen eigen-origin bestanden; de miniaturen blijven extern en worden online
@@ -37,6 +38,9 @@ export default function OfflineDownload({
   const { t } = useTaal();
   const [status, setStatus] = useState<Status>("idle");
   const [pct, setPct] = useState(0);
+  const dialoogRef = useRef<HTMLDivElement>(null);
+  // Focus-in, focus-trap, Escape en focus-herstel voor de modale dialog.
+  useModaal(open, dialoogRef, onClose);
 
   if (!open) return null;
 
@@ -82,10 +86,12 @@ export default function OfflineDownload({
 
   return (
     <div
+      ref={dialoogRef}
       className={stijl.laag}
       role="dialog"
       aria-modal="true"
       aria-label={t.offlineTitel}
+      tabIndex={-1}
     >
       <button
         type="button"
