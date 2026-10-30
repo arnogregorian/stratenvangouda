@@ -1,0 +1,53 @@
+# Houdt de geplande workflows actief. GitHub schakelt cron-workflows in een
+# openbare repository automatisch uit na 60 dagen zonder repository-activiteit
+# (alleen commits/pushes tellen mee — de dagelijkse uitrol-runs en de build-cache
+# niet). Daardoor zou de dagelijkse "Bouw en uitrol" na een stille periode
+# stilletjes stoppen. Deze workflow maakt daarom, wanneer de repo ~50 dagen stil
+# is, één kleine commit die de teller terugzet — ruim binnen de 60 dagen.
+#
+# De commit is bewust herkenbaar (auteur + bericht hieronder) zodat duidelijk is
+# waar die automatische commits vandaan komen. Hij wijzigt alleen
+# .github/keepalive.txt (een tijdstempel), raakt de site niet en veroorzaakt geen
+# uitrol: de dagelijkse build beslist op de API-bron (304), niet op git-wijziging.
+name: Keepalive geplande workflows
+
+on:
+  schedule:
+    - cron: "23 5 * * 1" # wekelijks, maandag 05:23 UTC
+  workflow_dispatch:
+
+# Eén commit per keer; nooit parallel.
+concurrency:
+  group: keepalive
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Commit als de repo ~50 dagen stil is
+        env:
+          DREMPEL_DAGEN: "50"
+        run: |
+          laatste=$(git log -1 --format=%ct)
+          nu=$(date +%s)
+          dagen=$(( (nu - laatste) / 86400 ))
+          echo "Laatste commit was $dagen dag(en) geleden (drempel: $DREMPEL_DAGEN)."
+          if [ "$dagen" -lt "$DREMPEL_DAGEN" ]; then
+            echo "Ruim binnen 60 dagen; geen keepalive-commit nodig."
+            exit 0
+          fi
+          git config user.name "die-goude-keepalive[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          date -u +%Y-%m-%dT%H:%M:%SZ > .github/keepalive.txt
+          git add .github/keepalive.txt
+          # [skip ci] voorkomt een onnodige Vercel-demo-build; de commit telt wél
+          # als repository-activiteit en zet de 60-dagenteller terug.
+          git commit -m "chore(ci): keepalive — geplande workflows actief houden [skip ci]"
+          git push
+          echo "Keepalive-commit gemaakt; 60-dagenteller teruggezet."

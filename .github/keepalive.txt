@@ -1,0 +1,4 @@
+Tijdstempel voor de keepalive-workflow (.github/workflows/keepalive.yml).
+Dit bestand wordt automatisch bijgewerkt wanneer de repository ~50 dagen zonder
+commits is, zodat GitHub de geplande workflows niet na 60 dagen uitschakelt.
+2026-10-30T00:00:00Z

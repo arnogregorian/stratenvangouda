@@ -98,6 +98,36 @@ daarna de volledig statische export (`out/`) wordt gegenereerd en geserveerd.
 - De uiteindelijke productie-hosting blijft de statische `out/` op de Linux-
   server van Die Goude; `vercel.json` heeft daar geen invloed op.
 
+### Automatische uitrol en keepalive (GitHub Actions)
+
+De productie-site wordt gebouwd en uitgerold door **`.github/workflows/uitrol.yml`**.
+Die Goude host op gedeelde Linux-hosting zonder Node.js, dus de build draait in
+GitHub Actions en alleen de statische `out/` gaat naar de server:
+
+- **Dagelijks** (cron 04:17 UTC): conditionele sync met `--alleen-bij-wijziging`.
+  Is de bron ongewijzigd (304), dan worden build én uitrol die dag overgeslagen.
+- **Handmatig** (`workflow_dispatch`, via de Actions-tab of
+  `gh workflow run uitrol.yml --ref main`): altijd een volledige sync + build +
+  uitrol. **Let op: een gewone push naar `main` rolt niet uit.** Codewijzigingen
+  worden pas live na een handmatige run (of op een dag dat de bron toch verandert).
+- Uitrol gaat via **FTPS** met `lftp` naar de webmap; de FTPS-gegevens staan in
+  de repository-secrets (`FTPS_HOST`, `FTPS_GEBRUIKER`, `FTPS_WACHTWOORD`).
+
+**Keepalive (`.github/workflows/keepalive.yml`).** GitHub schakelt geplande
+(cron-)workflows in een **openbare** repository automatisch uit na **60 dagen
+zonder repository-activiteit**; alleen echte commits/pushes tellen mee — de
+dagelijkse uitrol-runs en de build-cache niet. Zonder tegenmaatregel zou de
+dagelijkse uitrol na een stille periode stilletjes stoppen. De keepalive draait
+daarom **wekelijks** en maakt, zodra de repository ~50 dagen geen commit heeft
+gehad, één kleine commit die alleen `.github/keepalive.txt` (een tijdstempel)
+bijwerkt. Die commit telt als repository-activiteit en zet de 60-dagenteller
+terug — ruim binnen de grens en zonder onderhoud. De commits zijn herkenbaar aan
+auteur `die-goude-keepalive[bot]` en het bericht `chore(ci): keepalive …`; ze
+wijzigen de site niet en veroorzaken geen uitrol (de dagelijkse build beslist op
+de API-bron, niet op een git-wijziging). De keepalive pusht rechtstreeks naar
+`main`; wordt er na de overdracht branch-protection op `main` gezet, voeg dan een
+uitzondering voor deze bot toe (of laat de keepalive naar een eigen tak pushen).
+
 ### Omgevingsvariabelen (optioneel)
 
 | Variabele | Doel | Standaard |
@@ -120,16 +150,14 @@ Statische teksten bewerken: `content/colofon.md` en `content/hulp.md`
 
 ## Bekende beperkingen / openstaande punten
 
-- **Wijk en jaartal/leeftijd** van de straatnaam staan nog niet als veld in de
-  Straatnamen API; zodra beschikbaar worden ze op de detailpagina getoond
-  (zie `app/(paginas)/straat/[slug]/page.tsx`).
 - De API-lijst bevat enkele **dubbele identifiers** en één straat **zonder
   ARK-identifier** ("Cinqe erf"); het sync-script dedupliceert en slaat
   detailloze straten met alleen kaartinformatie op. Gemeld bij Gouda Tijdmachine.
 - **Verdwenen straten** worden al gesynchroniseerd maar niet getoond (v2 in het RFP).
 - De kaartlijnen zijn met de canvas-renderer niet per stuk met het toetsenbord
-  focusbaar; het zoekveld is het volwaardige, toegankelijke alternatief en wordt
-  als zodanig in de WCAG-rapportage bij oplevering vermeld.
+  focusbaar; het zoekveld is het volwaardige, toegankelijke alternatief. Zie het
+  toegankelijkheidsoverzicht (`docs/TOEGANKELIJKHEID.md`) voor de volledige
+  WCAG 2.2 AA-rapportage en bekende afwijkingen.
 - Huisstijl (lettertype, definitief kleurenpalet, favicon) en logo's volgen uit
   de designiteraties; nu tijdelijk systeemlettertype + kleuren van diegoude.nl.
 - Licentie: nader te bepalen met Die Goude (open source, bijv. MIT of EUPL).
