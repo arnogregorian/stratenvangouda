@@ -29,6 +29,7 @@ export default function StratenPagina() {
     naam: s.naam,
     slug: s.slug,
     alt: s.altNamen.join(" "),
+    buurten: s.buurten,
   }));
 
   return (

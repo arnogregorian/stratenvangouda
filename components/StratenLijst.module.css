@@ -1,7 +1,19 @@
-.zoek {
+/* Filterbalk: zoekveld + buurtkeuze naast elkaar, wrap op smalle schermen. */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.veldWrap {
+  flex: 1 1 14rem;
+}
+
+.zoek,
+.buurt {
   width: 100%;
   min-height: 48px;
-  margin: 0.5rem 0 0;
   padding: 0.65rem 1rem;
   font-size: 1.05rem;
   font-family: inherit;
@@ -12,11 +24,17 @@
   box-shadow: var(--schaduw);
 }
 
-.zoek:focus {
+.buurt {
+  cursor: pointer;
+}
+
+.zoek:focus,
+.buurt:focus {
   border-color: var(--kleur-primair);
 }
 
-.zoek:focus-visible {
+.zoek:focus-visible,
+.buurt:focus-visible {
   outline: 3px solid var(--kleur-primair);
   outline-offset: 2px;
 }
