@@ -108,6 +108,17 @@
   color: var(--kleur-ink-zacht);
 }
 
+/* Link naar de volledige alfabetische stratenlijst (RFP §4.2) — ook het
+   toegankelijke alternatief voor de kaart. Ruime tikzone (WCAG 2.5.8). */
+.allesLink {
+  display: block;
+  margin-top: 0.6rem;
+  padding: 0.4rem;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 /* Intro-startoptie: "Start op mijn locatie". */
 .locatieKnop {
   display: flex;

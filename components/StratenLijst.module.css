@@ -1,0 +1,65 @@
+.zoek {
+  width: 100%;
+  min-height: 48px;
+  margin: 0.5rem 0 0;
+  padding: 0.65rem 1rem;
+  font-size: 1.05rem;
+  font-family: inherit;
+  color: var(--kleur-ink);
+  background: var(--kleur-wit);
+  border: 1.5px solid var(--kleur-lijn);
+  border-radius: var(--radius);
+  box-shadow: var(--schaduw);
+}
+
+.zoek:focus {
+  border-color: var(--kleur-primair);
+}
+
+.zoek:focus-visible {
+  outline: 3px solid var(--kleur-primair);
+  outline-offset: 2px;
+}
+
+.aantal {
+  margin: 0.6rem 0 0.25rem;
+  font-size: 0.85rem;
+  color: var(--kleur-ink-zacht);
+}
+
+.geen {
+  color: var(--kleur-ink-zacht);
+  font-style: italic;
+}
+
+.groep {
+  margin-top: 1.5rem;
+}
+
+.letter {
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+  color: var(--kleur-primair);
+  border-bottom: 1px solid var(--kleur-lijn);
+  padding-bottom: 0.2rem;
+}
+
+.lijst {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: 0.1rem 1.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Ruime tikdoelen (≥ 24px hoog, WCAG 2.5.8). */
+.link {
+  display: block;
+  padding: 0.4rem 0.25rem;
+  border-radius: 6px;
+}
+
+.link:hover {
+  background: var(--kleur-accent);
+}

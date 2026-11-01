@@ -272,6 +272,9 @@ export default function StartScherm() {
         </div>
         <Zoekveld onLocate={toonOpKaart} />
         <p className={stijl.hint}>{t.introHint}</p>
+        <a href="/straten/" className={stijl.allesLink}>
+          Bekijk alle straten (alfabetisch)
+        </a>
         {isPWA && (
           <button
             type="button"
