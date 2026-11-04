@@ -37,8 +37,8 @@ export default function StratenPagina() {
       <h1>Alle straten</h1>
       <p>
         Alle {lijst.length} straten van Gouda op alfabetische volgorde. Tik op
-        een straat voor de herkomst en geschiedenis van de naam, of zoek
-        hieronder.
+        een straat voor de herkomst en geschiedenis van de naam. Zoek hieronder
+        op naam of buurt, of filter op een buurt.
       </p>
       <StratenLijst lijst={lijst} />
     </main>

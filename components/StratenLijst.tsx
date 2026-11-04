@@ -30,7 +30,8 @@ export default function StratenLijst({ lijst }: { lijst: Item[] }) {
       if (q === "") return true;
       return (
         normaliseer(s.naam).includes(q) ||
-        (s.alt !== "" && normaliseer(s.alt).includes(q))
+        (s.alt !== "" && normaliseer(s.alt).includes(q)) ||
+        s.buurten.some((b) => normaliseer(b).includes(q))
       );
     });
     const gesorteerd = [...gefilterd].sort((a, b) =>
@@ -57,14 +58,14 @@ export default function StratenLijst({ lijst }: { lijst: Item[] }) {
     <div>
       <div className={stijl.filters}>
         <div className={stijl.veldWrap}>
-          <label htmlFor="stratenzoek" className="alleen-screenreader">
-            Zoek in de stratenlijst
+          <label htmlFor="stratenzoek" className={stijl.veldLabel}>
+            Zoeken
           </label>
           <input
             id="stratenzoek"
             type="search"
             className={stijl.zoek}
-            placeholder="Zoek een straatnaam…"
+            placeholder="Zoek op naam of buurt…"
             value={term}
             onChange={(e) => setTerm(e.target.value)}
             autoComplete="off"
@@ -72,8 +73,8 @@ export default function StratenLijst({ lijst }: { lijst: Item[] }) {
         </div>
         {buurten.length > 0 && (
           <div className={stijl.veldWrap}>
-            <label htmlFor="buurtfilter" className="alleen-screenreader">
-              Filter op buurt
+            <label htmlFor="buurtfilter" className={stijl.veldLabel}>
+              Buurt
             </label>
             <select
               id="buurtfilter"

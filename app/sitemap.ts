@@ -10,6 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     { url: `${SITE_URL}/`, lastModified, priority: 1 },
+    { url: `${SITE_URL}/straten/`, lastModified, priority: 0.6 },
     { url: `${SITE_URL}/colofon/`, lastModified, priority: 0.3 },
     { url: `${SITE_URL}/hulp/`, lastModified, priority: 0.3 },
     ...alleStraten().map((straat) => ({
