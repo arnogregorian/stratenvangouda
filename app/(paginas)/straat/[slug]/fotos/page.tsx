@@ -8,6 +8,7 @@ import {
   straatViaSlug,
 } from "@/lib/straten";
 import FotoViewer from "@/components/FotoViewer";
+import { deelMetadata } from "@/lib/og";
 
 export const dynamicParams = false;
 
@@ -21,11 +22,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const straat = straatViaSlug(slug);
   if (!straat) return {};
+  const beschrijving = `Historische afbeeldingen van ${straat.naam} in Gouda, uit de collectie van het Streekarchief Midden-Holland.`;
   return {
     title: `Beeldmateriaal van ${straat.naam}`,
-    description: `Historische afbeeldingen van ${straat.naam} in Gouda, uit de collectie van het Streekarchief Midden-Holland.`,
+    description: beschrijving,
     // Fotoselectie gaat via ?foto=; alleen de basispagina indexeren
     alternates: { canonical: `/straat/${slug}/fotos/` },
+    ...deelMetadata({
+      url: `/straat/${slug}/fotos/`,
+      title: `Beeldmateriaal van ${straat.naam} — Straten van Gouda`,
+      description: beschrijving,
+    }),
   };
 }
 

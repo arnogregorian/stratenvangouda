@@ -148,6 +148,45 @@ npm run serve  # de statische export uit out/ lokaal serveren
 Statische teksten bewerken: `content/colofon.md` en `content/hulp.md`
 (gewone Markdown; wijzigingen zijn zichtbaar na een nieuwe build).
 
+## Beheer door Die Goude (zonder ontwikkelaar)
+
+### 1. Een wijziging van de repository naar de live site
+
+1. Wijzig de code of inhoud in de repository (op GitHub of lokaal) en commit
+   naar de branch `main`.
+2. **Een push zet de wijziging nog niet live.** Start de uitrol: GitHub → tab
+   **Actions** → workflow **"Bouw en uitrol"** → knop **Run workflow** (branch
+   `main`). De brondata (straatteksten) uit de Gouda Tijdmachine komen los
+   daarvan elke nacht automatisch mee; de handmatige run is nodig voor
+   wijzigingen in de site zelf (code of de teksten hieronder).
+3. De run doet sync → build → FTPS-upload en duurt ~een uur. De voortgang en
+   het eindresultaat staan in de Actions-tab.
+
+### 2. Colofon en hulp zelf aanpassen (RFP §6.5)
+
+De teksten staan als Markdown in `content/colofon.md` en `content/hulp.md`.
+Op GitHub: open het bestand → potlood-icoon (**Edit**) → pas de tekst aan →
+**Commit changes** naar `main`. Start daarna de uitrol zoals bij stap 1; na
+~een uur staat de nieuwe tekst live. (Markdown = platte tekst met eenvoudige
+opmaak: `##` voor een kop, `-` voor een opsomming, `[tekst](https://…)` voor
+een link.)
+
+### 3. Als de dagelijkse uitrol vastloopt
+
+- Een mislukte run is rood zichtbaar in de **Actions**-tab; GitHub mailt de
+  repo-eigenaar. Open de run en kijk in het log welke stap faalde.
+- **De live site blijft intact.** Een mislukte sync laat de vorige `cache.db`
+  staan, en de uitrol verwijdert nooit bestanden op de server — er komt dus
+  nooit een half-gebouwde site online.
+- Meestal volstaat **opnieuw draaien**: open de gefaalde run → **Re-run jobs**,
+  of start een verse volledige run via **Run workflow**.
+- Terugkerende oorzaken: een tijdelijk probleem bij de bron-API (werkt de
+  volgende dag doorgaans vanzelf weer) of bij de FTPS-server (het
+  tussencertificaat wordt per run dynamisch opgehaald met terugval op de
+  vastgelegde kopie in `.github/`). Blijft FTPS falen, controleer dan of de
+  secrets `FTPS_HOST` / `FTPS_GEBRUIKER` / `FTPS_WACHTWOORD` nog kloppen
+  (Settings → Secrets and variables → Actions).
+
 ## Bekende beperkingen / openstaande punten
 
 - De API-lijst bevat enkele **dubbele identifiers** en één straat **zonder
