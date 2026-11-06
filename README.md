@@ -2,7 +2,7 @@
 
 Laagdrempelige, mobile-first website waarmee Gouwenaars en bezoekers van Gouda
 de herkomst, betekenis en geschiedenis van Goudse straatnamen ontdekken.
-Gebouwd door [Webroots B.V.](https://webroots.nl) in opdracht van
+Gebouwd in opdracht van
 [Historische Vereniging Die Goude](https://www.diegoude.nl/), op basis van de
 data-infrastructuur van de [Gouda Tijdmachine](https://www.goudatijdmachine.nl/).
 
@@ -199,4 +199,4 @@ een link.)
   WCAG 2.2 AA-rapportage en bekende afwijkingen.
 - Huisstijl (lettertype, definitief kleurenpalet, favicon) en logo's volgen uit
   de designiteraties; nu tijdelijk systeemlettertype + kleuren van diegoude.nl.
-- Licentie: nader te bepalen met Die Goude (open source, bijv. MIT of EUPL).
+- Licentie: MIT (zie `LICENSE`).
