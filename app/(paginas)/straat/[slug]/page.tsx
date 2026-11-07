@@ -157,12 +157,12 @@ export default async function StraatPagina({ params }: Props) {
           </p>
         )}
 
-        {/* Gevoelige duiding bij een problematische straatnaam (API v1.10.0):
+        {/* Gevoelige duiding bij een beladen straatnaam (API v1.10.0):
             bewust als aparte rubriek na de "genoemd naar"-tekst. Slechts ~42
             straten hebben hier een waarde. */}
         {straat.problematisch && (
           <section className={stijl.problematisch}>
-            <h2 className={stijl.problematischKop}>Problematische straatnaam</h2>
+            <h2 className={stijl.problematischKop}>Beladen straatnaam</h2>
             <LeesMeer tekst={straat.problematisch} />
           </section>
         )}

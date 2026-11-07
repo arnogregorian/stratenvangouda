@@ -69,7 +69,7 @@
 }
 
 /* Aparte, duidelijk afgebakende rubriek voor de gevoelige duiding bij een
-   problematische straatnaam (API v1.10.0). Komt ná de "genoemd naar"-tekst. */
+   beladen straatnaam (API v1.10.0). Komt ná de "genoemd naar"-tekst. */
 .problematisch {
   margin-top: 1.75rem;
   padding-top: 1.25rem;
