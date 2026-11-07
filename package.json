@@ -15,7 +15,7 @@
   "dependencies": {
     "leaflet": "^1.9.4",
     "marked": "^18.0.6",
-    "next": "^16.2.10",
+    "next": "^16.4.5",
     "openseadragon": "^6.0.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
